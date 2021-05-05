@@ -478,5 +478,110 @@ namespace TrenchBroom {
             }
             return result;
         }
+
+        /**
+         * Gets the parent linked groups of `node` (0, 1, or more) by adding them to `dest`. (Doesn't return a vector, to avoid allocations.)
+         */
+        static void getContainingLinkedGroups(std::vector<Model::GroupNode*>& dest, Model::Node* node) {
+            Model::GroupNode* groupNode = Model::findContainingLinkedGroup(*node);
+            while (groupNode) {
+                dest.push_back(groupNode);
+                groupNode = Model::findContainingLinkedGroup(*groupNode);
+            }
+        }
+
+        /**
+         * Given a list of `nodes` the user wants to select, returns the subset that we should allow selection of,
+         * as well as a list of linked groups to lock.
+         *
+         * - Attempting to select nodes inside a linked group will propose locking all other groups in that link set.
+         *  This is intended to prevent users from making conflicting commands as well as communicate which
+         *  specific linked group they are modifying.
+         *
+         * - If `nodes` contains members of different groups in the same link set,
+         *  only those in the first group will be allowed to be selected ("first" in the order of `nodes`).
+         *
+         * Note: no changes are made, just the proposed selection and locking is returned.
+         */
+        SelectionResult nodeSelectionWithLinkedGroupConstraints(Model::WorldNode& world, const std::vector<Model::Node*>& nodes) {
+            kdl::vector_set<Model::GroupNode*> groupsToLock;
+            kdl::vector_set<Model::GroupNode*> groupsToKeepUnlocked;
+
+            // collects subset of `nodes` which pass the constraints
+            std::vector<Model::Node*> nodesToSelect;
+
+            std::vector<Model::GroupNode*> linkedGroupsContainingNode;
+            for (Model::Node* node : nodes) {                
+                linkedGroupsContainingNode.clear();
+                getContainingLinkedGroups(linkedGroupsContainingNode, node);
+
+                const bool isNodeInGroupsToLock = std::any_of(
+                    std::begin(linkedGroupsContainingNode), 
+                    std::end(linkedGroupsContainingNode), 
+                    [&](Model::GroupNode* group) { 
+                        return groupsToLock.count(group) == 1u;
+                    });
+
+                if (isNodeInGroupsToLock) {
+                    // don't bother trying to select this node.
+                    continue;
+                }
+
+                // we will allow selection of `node`, but we need to implictly lock
+                // any other groups in the link sets of the groups listed in `linkedGroupsContainingNode`.
+
+                // first check if we've already processed all of these
+                const bool areAncestorLinkedGroupsHandled = std::all_of(
+                    std::begin(linkedGroupsContainingNode), 
+                    std::end(linkedGroupsContainingNode), 
+                    [&](Model::GroupNode* group) { 
+                        return groupsToKeepUnlocked.count(group) == 1u;
+                    });
+
+                if (!areAncestorLinkedGroupsHandled) {
+                    // for each `group` in `linkedGroupsContainingNode`,
+                    // implicitly lock other groups in the link set of `group`, but keep `group` itself unlocked.
+                    for (Model::GroupNode* group : linkedGroupsContainingNode) {
+                        // find the others and add them to the lock list
+                        for (Model::GroupNode* otherGroup : Model::findLinkedGroups(world, *group->group().linkedGroupId())) {
+                            if (otherGroup == group) {
+                                continue;
+                            }
+                            groupsToLock.insert(otherGroup);
+                        }
+                        groupsToKeepUnlocked.insert(group);
+                    }
+                }
+
+                nodesToSelect.push_back(node);
+            }
+
+            return { nodesToSelect, groupsToLock.release_data() };
+        }
+
+        /**
+         * Given a list of `faces` the user wants to select, returns the subset that we should allow selection of,
+         * as well as a list of linked groups to lock.
+         *
+         * @see nodeSelectionWithLinkedGroupConstraints()
+         */
+        FaceSelectionResult faceSelectionWithLinkedGroupConstraints(Model::WorldNode& world, const std::vector<Model::BrushFaceHandle>& faces) {
+            const std::vector<Model::Node*> nodes = kdl::vec_transform(faces, [](auto handle) -> Model::Node* { return handle.node(); });
+            const auto constrainedNodes = nodeSelectionWithLinkedGroupConstraints(world, nodes);
+
+            const auto nodesToSelect = kdl::vector_set<Model::Node*>{constrainedNodes.nodesToSelect};
+
+            std::vector<Model::BrushFaceHandle> facesToSelect;
+            for (const auto& handle : faces) {
+                if (nodesToSelect.count(handle.node()) != 0) {
+                    facesToSelect.push_back(handle);
+                }
+            }
+
+            return FaceSelectionResult{
+                std::move(facesToSelect), 
+                constrainedNodes.groupsToLock
+            };
+        }
     }
 }

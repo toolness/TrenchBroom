@@ -22,6 +22,7 @@
 #include "FloatType.h"
 #include "Model/HitType.h"
 #include "Model/Node.h"
+#include "Model/BrushFaceHandle.h"
 
 #include <vecmath/bbox.h>
 
@@ -83,6 +84,18 @@ namespace TrenchBroom {
 
         std::vector<BrushNode*> filterBrushNodes(const std::vector<Node*>& nodes);
         std::vector<EntityNode*> filterEntityNodes(const std::vector<Node*>& nodes);
+
+        struct SelectionResult {
+            std::vector<Model::Node*> nodesToSelect;
+            std::vector<Model::GroupNode*> groupsToLock;
+        };
+        SelectionResult nodeSelectionWithLinkedGroupConstraints(Model::WorldNode& world, const std::vector<Model::Node*>& nodes);
+
+        struct FaceSelectionResult {
+            std::vector<Model::BrushFaceHandle> facesToSelect;
+            std::vector<Model::GroupNode*> groupsToLock;
+        };
+        FaceSelectionResult faceSelectionWithLinkedGroupConstraints(Model::WorldNode& world, const std::vector<Model::BrushFaceHandle>& faces);
     }
 }
 
