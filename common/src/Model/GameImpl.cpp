@@ -49,6 +49,7 @@
 #include "IO/ObjSerializer.h"
 #include "IO/WorldReader.h"
 #include "IO/SimpleParserStatus.h"
+#include "IO/SpriteParser.h"
 #include "IO/SystemPaths.h"
 #include "IO/TextureLoader.h"
 #include "Model/BrushBuilder.h"
@@ -482,6 +483,9 @@ namespace TrenchBroom {
                     // has to be the whole path for implicit textures!
                     IO::NvObjParser parser(path, std::begin(reader), std::end(reader), m_fs);
                     return parser.initializeModel(logger);
+                } else if (isModelFormat("png", extension, supported)) {
+                    IO::SpriteParser parser{modelName, file, m_fs};
+                    return parser.initializeModel(logger);
                 } else {
                     throw GameException("Unsupported model format '" + path.asString() + "'");
                 }
@@ -541,6 +545,9 @@ namespace TrenchBroom {
                     auto reader = file->reader().buffer();
                     // has to be the whole path for implicit textures!
                     IO::NvObjParser parser(path, std::begin(reader), std::end(reader), m_fs);
+                    parser.loadFrame(frameIndex, model, logger);
+                } else if (isModelFormat("png", extension, supported)) {
+                    IO::SpriteParser parser{modelName, file, m_fs};
                     parser.loadFrame(frameIndex, model, logger);
                 } else {
                     throw GameException("Unsupported model format '" + path.asString() + "'");
