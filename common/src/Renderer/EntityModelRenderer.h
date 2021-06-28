@@ -38,6 +38,7 @@ namespace TrenchBroom {
 
     namespace Renderer {
         class RenderBatch;
+        class ShaderConfig;
         class TexturedRenderer;
 
         class EntityModelRenderer : public DirectRenderable {
@@ -95,6 +96,8 @@ namespace TrenchBroom {
         private:
             void doPrepareVertices(VboManager& vboManager) override;
             void doRender(RenderContext& renderContext) override;
+            
+            void renderModels(RenderContext& renderContext, const std::vector<std::tuple<const Model::EntityNode*, Renderer::TexturedRenderer*>>& entities, const Renderer::ShaderConfig& shaderConfig);
         };
     }
 }

@@ -123,10 +123,31 @@ namespace TrenchBroom {
             m_entityModelManager.prepare(vboManager);
         }
 
+        static std::vector<std::tuple<const Model::EntityNode*, Renderer::TexturedRenderer*>> getEntities(const std::unordered_map<const Model::EntityNode*, TexturedRenderer*>& entities, const Assets::Orientation orientation) {
+            auto result = std::vector<std::tuple<const Model::EntityNode*, Renderer::TexturedRenderer*>>{};
+            result.reserve(entities.size());
+
+            for (const auto& [entityNode, renderer] : entities) {
+                if (const auto* model = entityNode->entity().model(); model && model->orientation() == orientation) {
+                    result.emplace_back(entityNode, renderer);
+                }
+            }
+
+            return result;
+        }
+
         void EntityModelRenderer::doRender(RenderContext& renderContext) {
+            glAssert(glEnable(GL_TEXTURE_2D));
+            glAssert(glActiveTexture(GL_TEXTURE0));
+
+            renderModels(renderContext, getEntities(m_entities, Assets::Orientation::Fixed), Shaders::FixedEntityModelShader);
+            renderModels(renderContext, getEntities(m_entities, Assets::Orientation::Billboard), Shaders::BillboardEntityModelShader);
+        }
+
+        void EntityModelRenderer::renderModels(RenderContext& renderContext, const std::vector<std::tuple<const Model::EntityNode*, Renderer::TexturedRenderer*>>& entities, const Renderer::ShaderConfig& shaderConfig) {
             auto& prefs = PreferenceManager::instance();
 
-            auto shader = ActiveShader{renderContext.shaderManager(), Shaders::EntityModelShader};
+            auto shader = ActiveShader{renderContext.shaderManager(), shaderConfig};
             shader.set("Brightness", prefs.get(Preferences::Brightness));
             shader.set("ApplyTinting", m_applyTinting);
             shader.set("TintColor", m_tintColor);
@@ -140,10 +161,7 @@ namespace TrenchBroom {
                                                        prefs.get(Preferences::SoftMapBoundsColor).b(),
                                                        0.1f});
 
-            glAssert(glEnable(GL_TEXTURE_2D));
-            glAssert(glActiveTexture(GL_TEXTURE0));
-
-            for (const auto& [entityNode, renderer] : m_entities) {
+            for (const auto& [entityNode, renderer] : entities) {
                 if (!m_showHiddenEntities && !m_editorContext.visible(entityNode)) {
                     continue;
                 }

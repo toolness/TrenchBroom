@@ -47,6 +47,16 @@ namespace TrenchBroom {
         };
 
         /**
+         * Controls the orientation of an entity model.
+         */
+        enum class Orientation {
+            /** The entity model is oriented according to the entity properties (position and rotation). */
+            Fixed,
+            /** The entity model uses the position from the entity, but it is always oriented towards the camera. */
+            Billboard
+        };
+
+        /**
          * One frame of the model. Since frames are loaded on demand, each frame has two possible states: loaded
          * and unloaded. These states are modeled as subclasses of this class.
          */
@@ -99,6 +109,12 @@ namespace TrenchBroom {
             virtual PitchType pitchType() const = 0;
 
             /**
+             * Returns this frame's orientation. The orientation controls how the frame is oriented in space depending
+             * on the camera position.
+             */
+            virtual Orientation orientation() const = 0;
+
+            /**
              * Intersects this frame with the given ray and returns the point of intersection.
              *
              * @param ray the ray to intersect
@@ -115,6 +131,7 @@ namespace TrenchBroom {
             std::string m_name;
             vm::bbox3f m_bounds;
             PitchType m_pitchType;
+            Orientation m_orientation;
 
             // For hit testing
             std::vector<vm::vec3f> m_tris;
@@ -123,13 +140,15 @@ namespace TrenchBroom {
             std::unique_ptr<SpacialTree> m_spacialTree;
         public:
             /**
-             * Creates a new frame with the given index, name and bounds.
+             * Creates a new frame.
              *
              * @param index the index of this frame
              * @param name the frame name
              * @param bounds the bounding box of the frame
+             * @param pitchType the pitch type
+             * @param orientation the orientation
              */
-            EntityModelLoadedFrame(size_t index, const std::string& name, const vm::bbox3f& bounds, PitchType pitchType);
+            EntityModelLoadedFrame(size_t index, const std::string& name, const vm::bbox3f& bounds, PitchType pitchType, Orientation orientation);
 
             ~EntityModelLoadedFrame();
 
@@ -137,6 +156,7 @@ namespace TrenchBroom {
             const std::string& name() const override;
             const vm::bbox3f& bounds() const override;
             PitchType pitchType() const override;
+            Orientation orientation() const override;
             float intersect(const vm::ray3f& ray) const override;
 
             /**
@@ -270,14 +290,16 @@ namespace TrenchBroom {
             std::vector<std::unique_ptr<EntityModelFrame>> m_frames;
             std::vector<std::unique_ptr<EntityModelSurface>> m_surfaces;
             PitchType m_pitchType;
+            Orientation m_orientation;
         public:
             /**
              * Creates a new entity model.
              *
              * @param name the name of the model
              * @param pitchType the pitch type
+             * @param orientation the orientation of the model
              */
-            explicit EntityModel(std::string name, PitchType pitchType);
+            explicit EntityModel(std::string name, PitchType pitchType, Orientation orientation);
 
             /**
              * Creates a renderer to render the given frame of the model using the skin with the given index.
