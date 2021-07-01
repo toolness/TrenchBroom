@@ -47,67 +47,67 @@ namespace TrenchBroom {
         const Value Value::Undefined = Value(UndefinedType::Value);
             
         Value::Value() :
-        m_value{NullType::Value},
+        m_value{std::make_shared<VariantType>(NullType::Value)},
         m_line{0u},
         m_column{0u} {}
 
         Value::Value(const BooleanType value, const size_t line, const size_t column) :
-        m_value{value},
+        m_value{std::make_shared<VariantType>(value)},
         m_line{line},
         m_column{column} {}
 
         Value::Value(StringType value, const size_t line, const size_t column) :
-        m_value{std::move(value)},
+        m_value{std::make_shared<VariantType>(std::move(value))},
         m_line{line},
         m_column{column} {}
 
         Value::Value(const char* value, const size_t line, const size_t column) :
-        m_value{StringType(value)},
+        m_value{std::make_shared<VariantType>(StringType(value))},
         m_line{line},
         m_column{column} {}
 
         Value::Value(const NumberType value, const size_t line, const size_t column) :
-        m_value{value},
+        m_value{std::make_shared<VariantType>(value)},
         m_line{line},
         m_column{column} {}
 
         Value::Value(const int value, const size_t line, const size_t column) :
-        m_value{static_cast<NumberType>(value)},
+        m_value{std::make_shared<VariantType>(static_cast<NumberType>(value))},
         m_line{line},
         m_column{column} {}
     
         Value::Value(const long value, const size_t line, const size_t column) :
-        m_value{static_cast<NumberType>(value)},
+        m_value{std::make_shared<VariantType>(static_cast<NumberType>(value))},
         m_line{line},
         m_column{column} {}
     
         Value::Value(const size_t value, const size_t line, const size_t column) :
-        m_value{static_cast<NumberType>(value)},
+        m_value{std::make_shared<VariantType>(static_cast<NumberType>(value))},
         m_line{line},
         m_column{column} {}
     
         Value::Value(ArrayType value, const size_t line, const size_t column) :
-        m_value{std::move(value)},
+        m_value{std::make_shared<VariantType>(std::move(value))},
         m_line{line},
         m_column{column} {}
     
         Value::Value(MapType value, const size_t line, const size_t column) :
-        m_value{std::move(value)},
+        m_value{std::make_shared<VariantType>(std::move(value))},
         m_line{line},
         m_column{column} {}
     
         Value::Value(RangeType value, const size_t line, const size_t column) :
-        m_value{std::move(value)},
+        m_value{std::make_shared<VariantType>(std::move(value))},
         m_line{line},
         m_column{column} {}
     
         Value::Value(NullType value, const size_t line, const size_t column) :
-        m_value{value},
+        m_value{std::make_shared<VariantType>(value)},
         m_line{line},
         m_column{column} {}
     
         Value::Value(UndefinedType value, const size_t line, const size_t column) :
-        m_value{value},
+        m_value{std::make_shared<VariantType>(value)},
         m_line{line},
         m_column{column} {}
     
@@ -126,7 +126,7 @@ namespace TrenchBroom {
                 [](const RangeType&)     { return ValueType::Range; },
                 [](const NullType&)      { return ValueType::Null; },
                 [](const UndefinedType&) { return ValueType::Undefined; }
-            ), m_value);
+            ), *m_value);
         }
         
         std::string Value::typeName() const {
@@ -155,7 +155,7 @@ namespace TrenchBroom {
                 [&](const RangeType&)     -> const BooleanType& { throw DereferenceError{describe(), type(), ValueType::Range}; },
                 [&](const NullType&)      -> const BooleanType& { static const BooleanType b = false; return b; },
                 [&](const UndefinedType&) -> const BooleanType& { throw DereferenceError{describe(), type(), ValueType::Undefined}; }
-            ), m_value);
+            ), *m_value);
         }
         
         const StringType& Value::stringValue() const {
@@ -168,7 +168,7 @@ namespace TrenchBroom {
                 [&](const RangeType&)     -> const StringType& { throw DereferenceError{describe(), type(), ValueType::Range}; },
                 [&](const NullType&)      -> const StringType& { static const StringType s; return s; },
                 [&](const UndefinedType&) -> const StringType& { throw DereferenceError{describe(), type(), ValueType::Undefined}; }
-            ), m_value);
+            ), *m_value);
         }
         
         const NumberType& Value::numberValue() const {
@@ -181,7 +181,7 @@ namespace TrenchBroom {
                 [&](const RangeType&)     -> const NumberType& { throw DereferenceError{describe(), type(), ValueType::Range}; },
                 [&](const NullType&)      -> const NumberType& { static const NumberType n = 0.0; return n; },
                 [&](const UndefinedType&) -> const NumberType& { throw DereferenceError{describe(), type(), ValueType::Undefined}; }
-            ), m_value);
+            ), *m_value);
         }
         
         IntegerType Value::integerValue() const {
@@ -198,7 +198,7 @@ namespace TrenchBroom {
                 [&](const RangeType&)     -> const ArrayType& { throw DereferenceError{describe(), type(), ValueType::Range}; },
                 [&](const NullType&)      -> const ArrayType& { static const ArrayType a(0); return a; },
                 [&](const UndefinedType&) -> const ArrayType& { throw DereferenceError{describe(), type(), ValueType::Undefined}; }
-            ), m_value);
+            ), *m_value);
         }
         
         const MapType& Value::mapValue() const {
@@ -211,7 +211,7 @@ namespace TrenchBroom {
                 [&](const RangeType&)     -> const MapType& { throw DereferenceError{describe(), type(), ValueType::Range}; },
                 [&](const NullType&)      -> const MapType& { static const MapType m; return m; },
                 [&](const UndefinedType&) -> const MapType& { throw DereferenceError{describe(), type(), ValueType::Undefined}; }
-            ), m_value);
+            ), *m_value);
         }
         
         const RangeType& Value::rangeValue() const {
@@ -224,7 +224,7 @@ namespace TrenchBroom {
                 [&](const RangeType& r)   -> const RangeType& { return r; },
                 [&](const NullType&)      -> const RangeType& { throw DereferenceError{describe(), type(), ValueType::Null}; },
                 [&](const UndefinedType&) -> const RangeType& { throw DereferenceError{describe(), type(), ValueType::Undefined}; }
-            ), m_value);
+            ), *m_value);
         }
         
         bool Value::null() const {
@@ -268,7 +268,7 @@ namespace TrenchBroom {
                 [](const RangeType& r)   -> size_t { return r.size(); },
                 [](const NullType&)      -> size_t { return 0u; },
                 [](const UndefinedType&) -> size_t { return 0u; }
-            ), m_value);
+            ), *m_value);
         }
         
         bool Value::convertibleTo(const ValueType toType) const {
@@ -412,7 +412,7 @@ namespace TrenchBroom {
 
                     return false;
                 }
-            ), m_value);
+            ), *m_value);
         }
         
         Value Value::convertTo(const ValueType toType) const {
@@ -566,7 +566,7 @@ namespace TrenchBroom {
 
                     throw ConversionError{describe(), type(), toType};
                 }
-            ), m_value);
+            ), *m_value);
         }
 
         std::string Value::asString(const bool multiline) const {
@@ -677,7 +677,7 @@ namespace TrenchBroom {
                 [&](const UndefinedType&) {
                     str << "undefined";
                 }
-            ), m_value);
+            ), *m_value);
         }
 
         static  size_t computeIndex(const long index, const size_t indexableSize) {
