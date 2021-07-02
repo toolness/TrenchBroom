@@ -135,6 +135,24 @@ namespace TrenchBroom {
             return str.str();
         }
 
+        bool operator==(const Expression& lhs, const Expression& rhs) {
+            return std::visit(kdl::overload(
+                [](const LiteralExpression& l, const LiteralExpression& r)     { return l == r; },
+                [](const VariableExpression& l, const VariableExpression& r)   { return l == r; },
+                [](const ArrayExpression& l, const ArrayExpression& r)         { return l == r; },
+                [](const MapExpression& l, const MapExpression& r)             { return l == r; },
+                [](const UnaryExpression& l, const UnaryExpression& r)         { return l == r; },
+                [](const BinaryExpression& l, const BinaryExpression& r)       { return l == r; },
+                [](const SubscriptExpression& l, const SubscriptExpression& r) { return l == r; },
+                [](const SwitchExpression& l, const SwitchExpression& r)       { return l == r; },
+                [](const auto&, const auto&)                                   { return false; }
+            ), *lhs.m_expression, *rhs.m_expression);
+        }
+
+        bool operator!=(const Expression& lhs, const Expression& rhs) {
+            return !(lhs == rhs);
+        }
+
         std::ostream& operator<<(std::ostream& str, const Expression& exp) {
             std::visit([&](const auto& e) { str << e; }, *exp.m_expression);
             return str;
@@ -197,6 +215,14 @@ namespace TrenchBroom {
             return m_value;
         }
         
+        bool operator==(const LiteralExpression& lhs, const LiteralExpression& rhs) {
+            return lhs.m_value == rhs.m_value;
+        }
+
+        bool operator!=(const LiteralExpression& lhs, const LiteralExpression& rhs) {
+            return !(lhs == rhs);
+        }
+
         std::ostream& operator<<(std::ostream& str, const LiteralExpression& exp) {
             str << exp.m_value;
             return str;
@@ -209,6 +235,14 @@ namespace TrenchBroom {
             return context.variableValue(m_variableName);
         }
         
+        bool operator==(const VariableExpression& lhs, const VariableExpression& rhs) {
+            return lhs.m_variableName == rhs.m_variableName;
+        }
+
+        bool operator!=(const VariableExpression& lhs, const VariableExpression& rhs) {
+            return !(lhs == rhs);
+        }
+
         std::ostream& operator<<(std::ostream& str, const VariableExpression& exp) {
             str << exp.m_variableName;
             return str;
@@ -251,6 +285,14 @@ namespace TrenchBroom {
             }
         }
 
+        bool operator==(const ArrayExpression& lhs, const ArrayExpression& rhs) {
+            return lhs.m_elements == rhs.m_elements;
+        }
+
+        bool operator!=(const ArrayExpression& lhs, const ArrayExpression& rhs) {
+            return !(lhs == rhs);
+        }
+
         std::ostream& operator<<(std::ostream& str, const ArrayExpression& exp) {
             str << "[ ";
             size_t i = 0u;
@@ -289,6 +331,14 @@ namespace TrenchBroom {
             } else {
                 return std::nullopt;
             }
+        }
+
+        bool operator==(const MapExpression& lhs, const MapExpression& rhs) {
+            return lhs.m_elements == rhs.m_elements;
+        }
+
+        bool operator!=(const MapExpression& lhs, const MapExpression& rhs) {
+            return !(lhs == rhs);
         }
 
         std::ostream& operator<<(std::ostream& str, const MapExpression& exp) {
@@ -331,6 +381,14 @@ namespace TrenchBroom {
             } else {
                 return std::nullopt;
             }
+        }
+
+        bool operator==(const UnaryExpression& lhs, const UnaryExpression& rhs) {
+            return lhs.m_operator == rhs.m_operator && lhs.m_operand == rhs.m_operand;
+        }
+
+        bool operator!=(const UnaryExpression& lhs, const UnaryExpression& rhs) {
+            return !(lhs == rhs);
         }
 
         std::ostream& operator<<(std::ostream& str, const UnaryExpression& exp) {
@@ -493,6 +551,14 @@ namespace TrenchBroom {
             };
         }
 
+        bool operator==(const BinaryExpression& lhs, const BinaryExpression& rhs) {
+            return lhs.m_operator == rhs.m_operator && lhs.m_leftOperand == rhs.m_leftOperand && lhs.m_rightOperand == rhs.m_rightOperand;;
+        }
+
+        bool operator!=(const BinaryExpression& lhs, const BinaryExpression& rhs) {
+            return !(lhs == rhs);
+        }
+
         std::ostream& operator<<(std::ostream& str, const BinaryExpression& exp) {
             switch (exp.m_operator) {
                 case BinaryOperator::Addition:
@@ -587,6 +653,14 @@ namespace TrenchBroom {
             }
         }
 
+        bool operator==(const SubscriptExpression& lhs, const SubscriptExpression& rhs) {
+            return lhs.m_leftOperand == rhs.m_leftOperand && lhs.m_rightOperand == rhs.m_rightOperand;;
+        }
+
+        bool operator!=(const SubscriptExpression& lhs, const SubscriptExpression& rhs) {
+            return !(lhs == rhs);
+        }
+
         std::ostream& operator<<(std::ostream& str, const SubscriptExpression& exp) {
             str << exp.m_leftOperand << "[" << exp.m_rightOperand << "]";
             return str;
@@ -619,6 +693,14 @@ namespace TrenchBroom {
             }
             
             return std::nullopt;
+        }
+
+        bool operator==(const SwitchExpression& lhs, const SwitchExpression& rhs) {
+            return lhs.m_cases == rhs.m_cases;
+        }
+
+        bool operator!=(const SwitchExpression& lhs, const SwitchExpression& rhs) {
+            return !(lhs == rhs);
         }
 
         std::ostream& operator<<(std::ostream& str, const SwitchExpression& exp) {

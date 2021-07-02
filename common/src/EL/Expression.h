@@ -80,6 +80,8 @@ namespace TrenchBroom {
 
             std::string asString() const;
 
+            friend bool operator==(const Expression& lhs, const Expression& rhs);
+            friend bool operator!=(const Expression& lhs, const Expression& rhs);
             friend std::ostream& operator<<(std::ostream& str, const Expression& exp);
         private:
             void rebalanceByPrecedence();
@@ -93,7 +95,9 @@ namespace TrenchBroom {
             LiteralExpression(Value value);
             
             const Value& evaluate(const EvaluationContext& context) const;
-            
+
+            friend bool operator==(const LiteralExpression& lhs, const LiteralExpression& rhs);
+            friend bool operator!=(const LiteralExpression& lhs, const LiteralExpression& rhs);
             friend std::ostream& operator<<(std::ostream& str, const LiteralExpression& exp);
         };
         
@@ -104,7 +108,9 @@ namespace TrenchBroom {
             VariableExpression(std::string variableName);
             
             Value evaluate(const EvaluationContext& context) const;
-            
+
+            friend bool operator==(const VariableExpression& lhs, const VariableExpression& rhs);
+            friend bool operator!=(const VariableExpression& lhs, const VariableExpression& rhs);
             friend std::ostream& operator<<(std::ostream& str, const VariableExpression& exp);
         };
         
@@ -116,7 +122,9 @@ namespace TrenchBroom {
             
             Value evaluate(const EvaluationContext& context) const;
             std::optional<LiteralExpression> optimize();
-            
+
+            friend bool operator==(const ArrayExpression& lhs, const ArrayExpression& rhs);
+            friend bool operator!=(const ArrayExpression& lhs, const ArrayExpression& rhs);
             friend std::ostream& operator<<(std::ostream& str, const ArrayExpression& exp);
         };
         
@@ -128,7 +136,9 @@ namespace TrenchBroom {
 
             Value evaluate(const EvaluationContext& context) const;
             std::optional<LiteralExpression> optimize();
-            
+
+            friend bool operator==(const MapExpression& lhs, const MapExpression& rhs);
+            friend bool operator!=(const MapExpression& lhs, const MapExpression& rhs);
             friend std::ostream& operator<<(std::ostream& str, const MapExpression& exp);
         };
         
@@ -149,7 +159,9 @@ namespace TrenchBroom {
 
             Value evaluate(const EvaluationContext& context) const;
             std::optional<LiteralExpression> optimize();
-            
+
+            friend bool operator==(const UnaryExpression& lhs, const UnaryExpression& rhs);
+            friend bool operator!=(const UnaryExpression& lhs, const UnaryExpression& rhs);
             friend std::ostream& operator<<(std::ostream& str, const UnaryExpression& exp);
         };
         
@@ -193,6 +205,8 @@ namespace TrenchBroom {
             
             size_t precedence() const;
 
+            friend bool operator==(const BinaryExpression& lhs, const BinaryExpression& rhs);
+            friend bool operator!=(const BinaryExpression& lhs, const BinaryExpression& rhs);
             friend std::ostream& operator<<(std::ostream& str, const BinaryExpression& exp);
         };
         
@@ -207,7 +221,9 @@ namespace TrenchBroom {
             
             Value evaluate(const EvaluationContext& context) const;
             std::optional<LiteralExpression> optimize();
-            
+
+            friend bool operator==(const SubscriptExpression& lhs, const SubscriptExpression& rhs);
+            friend bool operator!=(const SubscriptExpression& lhs, const SubscriptExpression& rhs);
             friend std::ostream& operator<<(std::ostream& str, const SubscriptExpression& exp);
         };
         
@@ -219,7 +235,9 @@ namespace TrenchBroom {
 
             Value evaluate(const EvaluationContext& context) const;
             std::optional<LiteralExpression> optimize();
-            
+
+            friend bool operator==(const SwitchExpression& lhs, const SwitchExpression& rhs);
+            friend bool operator!=(const SwitchExpression& lhs, const SwitchExpression& rhs);
             friend std::ostream& operator<<(std::ostream& str, const SwitchExpression& exp);
         };
     }
