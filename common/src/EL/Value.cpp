@@ -47,74 +47,74 @@ namespace TrenchBroom {
         const Value Value::Undefined = Value(UndefinedType::Value);
             
         Value::Value() :
-        m_value(NullType::Value),
-        m_line(0u),
-        m_column(0u) {}
+        m_value{NullType::Value},
+        m_line{0u},
+        m_column{0u} {}
 
         Value::Value(const BooleanType value, const size_t line, const size_t column) :
-        m_value(value),
-        m_line(line),
-        m_column(column) {}
+        m_value{value},
+        m_line{line},
+        m_column{column} {}
 
         Value::Value(StringType value, const size_t line, const size_t column) :
-        m_value(std::move(value)),
-        m_line(line),
-        m_column(column) {}
+        m_value{std::move(value)},
+        m_line{line},
+        m_column{column} {}
 
         Value::Value(const char* value, const size_t line, const size_t column) :
-        m_value(StringType(value)),
-        m_line(line),
-        m_column(column) {}
+        m_value{StringType(value)},
+        m_line{line},
+        m_column{column} {}
 
         Value::Value(const NumberType value, const size_t line, const size_t column) :
-        m_value(value),
-        m_line(line),
-        m_column(column) {}
+        m_value{value},
+        m_line{line},
+        m_column{column} {}
 
         Value::Value(const int value, const size_t line, const size_t column) :
-        m_value(static_cast<NumberType>(value)),
-        m_line(line),
-        m_column(column) {}
+        m_value{static_cast<NumberType>(value)},
+        m_line{line},
+        m_column{column} {}
     
         Value::Value(const long value, const size_t line, const size_t column) :
-        m_value(static_cast<NumberType>(value)),
-        m_line(line),
-        m_column(column) {}
+        m_value{static_cast<NumberType>(value)},
+        m_line{line},
+        m_column{column} {}
     
         Value::Value(const size_t value, const size_t line, const size_t column) :
-        m_value(static_cast<NumberType>(value)),
-        m_line(line),
-        m_column(column) {}
+        m_value{static_cast<NumberType>(value)},
+        m_line{line},
+        m_column{column} {}
     
         Value::Value(ArrayType value, const size_t line, const size_t column) :
-        m_value(std::move(value)),
-        m_line(line),
-        m_column(column) {}
+        m_value{std::move(value)},
+        m_line{line},
+        m_column{column} {}
     
         Value::Value(MapType value, const size_t line, const size_t column) :
-        m_value(std::move(value)),
-        m_line(line),
-        m_column(column) {}
+        m_value{std::move(value)},
+        m_line{line},
+        m_column{column} {}
     
         Value::Value(RangeType value, const size_t line, const size_t column) :
-        m_value(std::move(value)),
-        m_line(line),
-        m_column(column) {}
+        m_value{std::move(value)},
+        m_line{line},
+        m_column{column} {}
     
         Value::Value(NullType value, const size_t line, const size_t column) :
-        m_value(value),
-        m_line(line),
-        m_column(column) {}
+        m_value{value},
+        m_line{line},
+        m_column{column} {}
     
         Value::Value(UndefinedType value, const size_t line, const size_t column) :
-        m_value(value),
-        m_line(line),
-        m_column(column) {}
+        m_value{value},
+        m_line{line},
+        m_column{column} {}
     
         Value::Value(Value value, const size_t line, const size_t column) :
-        m_value(std::move(value.m_value)),
-        m_line(line),
-        m_column(column) {}
+        m_value{std::move(value.m_value)},
+        m_line{line},
+        m_column{column} {}
         
         ValueType Value::type() const {
             return std::visit(kdl::overload(
@@ -148,39 +148,39 @@ namespace TrenchBroom {
         const BooleanType& Value::booleanValue() const {
             return std::visit(kdl::overload(
                 [&](const BooleanType& b) -> const BooleanType& { return b; },
-                [&](const StringType&)    -> const BooleanType& { throw DereferenceError(describe(), type(), ValueType::String); },
-                [&](const NumberType&)    -> const BooleanType& { throw DereferenceError(describe(), type(), ValueType::Number); },
-                [&](const ArrayType&)     -> const BooleanType& { throw DereferenceError(describe(), type(), ValueType::Array); },
-                [&](const MapType&)       -> const BooleanType& { throw DereferenceError(describe(), type(), ValueType::Map); },
-                [&](const RangeType&)     -> const BooleanType& { throw DereferenceError(describe(), type(), ValueType::Range); },
+                [&](const StringType&)    -> const BooleanType& { throw DereferenceError{describe(), type(), ValueType::String}; },
+                [&](const NumberType&)    -> const BooleanType& { throw DereferenceError{describe(), type(), ValueType::Number}; },
+                [&](const ArrayType&)     -> const BooleanType& { throw DereferenceError{describe(), type(), ValueType::Array}; },
+                [&](const MapType&)       -> const BooleanType& { throw DereferenceError{describe(), type(), ValueType::Map}; },
+                [&](const RangeType&)     -> const BooleanType& { throw DereferenceError{describe(), type(), ValueType::Range}; },
                 [&](const NullType&)      -> const BooleanType& { static const BooleanType b = false; return b; },
-                [&](const UndefinedType&) -> const BooleanType& { throw DereferenceError(describe(), type(), ValueType::Undefined); }
+                [&](const UndefinedType&) -> const BooleanType& { throw DereferenceError{describe(), type(), ValueType::Undefined}; }
             ), m_value);
         }
         
         const StringType& Value::stringValue() const {
             return std::visit(kdl::overload(
-                [&](const BooleanType&)   -> const StringType& { throw DereferenceError(describe(), type(), ValueType::Boolean); },
+                [&](const BooleanType&)   -> const StringType& { throw DereferenceError{describe(), type(), ValueType::Boolean}; },
                 [&](const StringType& s)  -> const StringType& { return s; },
-                [&](const NumberType&)    -> const StringType& { throw DereferenceError(describe(), type(), ValueType::Number); },
-                [&](const ArrayType&)     -> const StringType& { throw DereferenceError(describe(), type(), ValueType::Array); },
-                [&](const MapType&)       -> const StringType& { throw DereferenceError(describe(), type(), ValueType::Map); },
-                [&](const RangeType&)     -> const StringType& { throw DereferenceError(describe(), type(), ValueType::Range); },
+                [&](const NumberType&)    -> const StringType& { throw DereferenceError{describe(), type(), ValueType::Number}; },
+                [&](const ArrayType&)     -> const StringType& { throw DereferenceError{describe(), type(), ValueType::Array}; },
+                [&](const MapType&)       -> const StringType& { throw DereferenceError{describe(), type(), ValueType::Map}; },
+                [&](const RangeType&)     -> const StringType& { throw DereferenceError{describe(), type(), ValueType::Range}; },
                 [&](const NullType&)      -> const StringType& { static const StringType s; return s; },
-                [&](const UndefinedType&) -> const StringType& { throw DereferenceError(describe(), type(), ValueType::Undefined); }
+                [&](const UndefinedType&) -> const StringType& { throw DereferenceError{describe(), type(), ValueType::Undefined}; }
             ), m_value);
         }
         
         const NumberType& Value::numberValue() const {
             return std::visit(kdl::overload(
-                [&](const BooleanType&)   -> const NumberType& { throw DereferenceError(describe(), type(), ValueType::Boolean); },
-                [&](const StringType&)    -> const NumberType& { throw DereferenceError(describe(), type(), ValueType::String); },
+                [&](const BooleanType&)   -> const NumberType& { throw DereferenceError{describe(), type(), ValueType::Boolean}; },
+                [&](const StringType&)    -> const NumberType& { throw DereferenceError{describe(), type(), ValueType::String}; },
                 [&](const NumberType& n)  -> const NumberType& { return n; },
-                [&](const ArrayType&)     -> const NumberType& { throw DereferenceError(describe(), type(), ValueType::Array); },
-                [&](const MapType&)       -> const NumberType& { throw DereferenceError(describe(), type(), ValueType::Map); },
-                [&](const RangeType&)     -> const NumberType& { throw DereferenceError(describe(), type(), ValueType::Range); },
+                [&](const ArrayType&)     -> const NumberType& { throw DereferenceError{describe(), type(), ValueType::Array}; },
+                [&](const MapType&)       -> const NumberType& { throw DereferenceError{describe(), type(), ValueType::Map}; },
+                [&](const RangeType&)     -> const NumberType& { throw DereferenceError{describe(), type(), ValueType::Range}; },
                 [&](const NullType&)      -> const NumberType& { static const NumberType n = 0.0; return n; },
-                [&](const UndefinedType&) -> const NumberType& { throw DereferenceError(describe(), type(), ValueType::Undefined); }
+                [&](const UndefinedType&) -> const NumberType& { throw DereferenceError{describe(), type(), ValueType::Undefined}; }
             ), m_value);
         }
         
@@ -190,40 +190,40 @@ namespace TrenchBroom {
         
         const ArrayType& Value::arrayValue() const {
             return std::visit(kdl::overload(
-                [&](const BooleanType&)   -> const ArrayType& { throw DereferenceError(describe(), type(), ValueType::Boolean); },
-                [&](const StringType&)    -> const ArrayType& { throw DereferenceError(describe(), type(), ValueType::String); },
-                [&](const NumberType&)    -> const ArrayType& { throw DereferenceError(describe(), type(), ValueType::Number); },
+                [&](const BooleanType&)   -> const ArrayType& { throw DereferenceError{describe(), type(), ValueType::Boolean}; },
+                [&](const StringType&)    -> const ArrayType& { throw DereferenceError{describe(), type(), ValueType::String}; },
+                [&](const NumberType&)    -> const ArrayType& { throw DereferenceError{describe(), type(), ValueType::Number}; },
                 [&](const ArrayType& a)   -> const ArrayType& { return a; },
-                [&](const MapType&)       -> const ArrayType& { throw DereferenceError(describe(), type(), ValueType::Map); },
-                [&](const RangeType&)     -> const ArrayType& { throw DereferenceError(describe(), type(), ValueType::Range); },
+                [&](const MapType&)       -> const ArrayType& { throw DereferenceError{describe(), type(), ValueType::Map}; },
+                [&](const RangeType&)     -> const ArrayType& { throw DereferenceError{describe(), type(), ValueType::Range}; },
                 [&](const NullType&)      -> const ArrayType& { static const ArrayType a(0); return a; },
-                [&](const UndefinedType&) -> const ArrayType& { throw DereferenceError(describe(), type(), ValueType::Undefined); }
+                [&](const UndefinedType&) -> const ArrayType& { throw DereferenceError{describe(), type(), ValueType::Undefined}; }
             ), m_value);
         }
         
         const MapType& Value::mapValue() const {
             return std::visit(kdl::overload(
-                [&](const BooleanType&)   -> const MapType& { throw DereferenceError(describe(), type(), ValueType::Boolean); },
-                [&](const StringType&)    -> const MapType& { throw DereferenceError(describe(), type(), ValueType::String); },
-                [&](const NumberType&)    -> const MapType& { throw DereferenceError(describe(), type(), ValueType::Number); },
-                [&](const ArrayType&)     -> const MapType& { throw DereferenceError(describe(), type(), ValueType::Array); },
+                [&](const BooleanType&)   -> const MapType& { throw DereferenceError{describe(), type(), ValueType::Boolean}; },
+                [&](const StringType&)    -> const MapType& { throw DereferenceError{describe(), type(), ValueType::String}; },
+                [&](const NumberType&)    -> const MapType& { throw DereferenceError{describe(), type(), ValueType::Number}; },
+                [&](const ArrayType&)     -> const MapType& { throw DereferenceError{describe(), type(), ValueType::Array}; },
                 [&](const MapType& m)     -> const MapType& { return m; },
-                [&](const RangeType&)     -> const MapType& { throw DereferenceError(describe(), type(), ValueType::Range); },
+                [&](const RangeType&)     -> const MapType& { throw DereferenceError{describe(), type(), ValueType::Range}; },
                 [&](const NullType&)      -> const MapType& { static const MapType m; return m; },
-                [&](const UndefinedType&) -> const MapType& { throw DereferenceError(describe(), type(), ValueType::Undefined); }
+                [&](const UndefinedType&) -> const MapType& { throw DereferenceError{describe(), type(), ValueType::Undefined}; }
             ), m_value);
         }
         
         const RangeType& Value::rangeValue() const {
             return std::visit(kdl::overload(
-                [&](const BooleanType&)   -> const RangeType& { throw DereferenceError(describe(), type(), ValueType::Boolean); },
-                [&](const StringType&)    -> const RangeType& { throw DereferenceError(describe(), type(), ValueType::String); },
-                [&](const NumberType&)    -> const RangeType& { throw DereferenceError(describe(), type(), ValueType::Number); },
-                [&](const ArrayType&)     -> const RangeType& { throw DereferenceError(describe(), type(), ValueType::Array); },
-                [&](const MapType&)       -> const RangeType& { throw DereferenceError(describe(), type(), ValueType::Map); },
+                [&](const BooleanType&)   -> const RangeType& { throw DereferenceError{describe(), type(), ValueType::Boolean}; },
+                [&](const StringType&)    -> const RangeType& { throw DereferenceError{describe(), type(), ValueType::String}; },
+                [&](const NumberType&)    -> const RangeType& { throw DereferenceError{describe(), type(), ValueType::Number}; },
+                [&](const ArrayType&)     -> const RangeType& { throw DereferenceError{describe(), type(), ValueType::Array}; },
+                [&](const MapType&)       -> const RangeType& { throw DereferenceError{describe(), type(), ValueType::Map}; },
                 [&](const RangeType& r)   -> const RangeType& { return r; },
-                [&](const NullType&)      -> const RangeType& { throw DereferenceError(describe(), type(), ValueType::Null); },
-                [&](const UndefinedType&) -> const RangeType& { throw DereferenceError(describe(), type(), ValueType::Undefined); }
+                [&](const NullType&)      -> const RangeType& { throw DereferenceError{describe(), type(), ValueType::Null}; },
+                [&](const UndefinedType&) -> const RangeType& { throw DereferenceError{describe(), type(), ValueType::Undefined}; }
             ), m_value);
         }
         
@@ -237,7 +237,7 @@ namespace TrenchBroom {
         
         const std::vector<std::string> Value::asStringList() const {
             const ArrayType& array = arrayValue();
-            std::vector<std::string> result;
+            auto result = std::vector<std::string>{};
             result.reserve(array.size());
             
             for (const auto& entry : array) {
@@ -249,7 +249,7 @@ namespace TrenchBroom {
         
         const std::vector<std::string> Value::asStringSet() const {
             const ArrayType& array = arrayValue();
-            kdl::vector_set<std::string> result(array.size());
+            auto result = kdl::vector_set<std::string>(array.size());
 
             for (const auto& entry : array) {
                 result.insert(entry.convertTo(ValueType::String).stringValue());
@@ -422,9 +422,9 @@ namespace TrenchBroom {
                         case ValueType::Boolean:
                             return *this;
                         case ValueType::String:
-                            return Value(b ? "true" : "false", m_line, m_column);
+                            return Value{b ? "true" : "false", m_line, m_column};
                         case ValueType::Number:
-                            return Value(b ? 1.0 : 0.0, m_line, m_column);
+                            return Value{b ? 1.0 : 0.0, m_line, m_column};
                         case ValueType::Array:
                         case ValueType::Map:
                         case ValueType::Range:
@@ -433,25 +433,25 @@ namespace TrenchBroom {
                             break;
                     }
 
-                    throw ConversionError(describe(), type(), toType);
+                    throw ConversionError{describe(), type(), toType};
                 },
                 [&](const StringType& s) -> Value {
                     switch (toType) {
                         case ValueType::Boolean:
-                            return Value(!kdl::cs::str_is_equal(s, "false") && !s.empty(), m_line, m_column);
+                            return Value{!kdl::cs::str_is_equal(s, "false") && !s.empty(), m_line, m_column};
                         case ValueType::String:
                             return *this;
                         case ValueType::Number: {
                             if (kdl::str_is_blank(s)) {
-                                return Value(0.0, m_line, m_column);
+                                return Value{0.0, m_line, m_column};
                             }
                             const char* begin = s.c_str();
                             char* end;
                             const NumberType value = std::strtod(begin, &end);
                             if (value == 0.0 && end == begin) {
-                                throw ConversionError(describe(), type(), toType);
+                                throw ConversionError{describe(), type(), toType};
                             }
-                            return Value(value, m_line, m_column);
+                            return Value{value, m_line, m_column};
                         }
                         case ValueType::Array:
                         case ValueType::Map:
@@ -461,14 +461,14 @@ namespace TrenchBroom {
                             break;
                     }
 
-                    throw ConversionError(describe(), type(), toType);
+                    throw ConversionError{describe(), type(), toType};
                 },
                 [&](const NumberType& n) -> Value {
                     switch (toType) {
                         case ValueType::Boolean:
-                            return Value(n != 0.0, m_line, m_column);
+                            return Value{n != 0.0, m_line, m_column};
                         case ValueType::String:
-                            return Value(describe(), m_line, m_column);
+                            return Value{describe(), m_line, m_column};
                         case ValueType::Number:
                             return *this;
                         case ValueType::Array:
@@ -479,7 +479,7 @@ namespace TrenchBroom {
                             break;
                     }
 
-                    throw ConversionError(describe(), type(), toType);
+                    throw ConversionError{describe(), type(), toType};
                 },
                 [&](const ArrayType&) -> Value {
                     switch (toType) {
@@ -495,7 +495,7 @@ namespace TrenchBroom {
                             break;
                     }
 
-                    throw ConversionError(describe(), type(), toType);
+                    throw ConversionError{describe(), type(), toType};
                 },
                 [&](const MapType&) -> Value {
                     switch (toType) {
@@ -511,7 +511,7 @@ namespace TrenchBroom {
                             break;
                     }
 
-                    throw ConversionError(describe(), type(), toType);
+                    throw ConversionError{describe(), type(), toType};
                 },
                 [&](const RangeType&) -> Value {
                     switch (toType) {
@@ -527,28 +527,28 @@ namespace TrenchBroom {
                             break;
                     }
 
-                    throw ConversionError(describe(), type(), toType);
+                    throw ConversionError{describe(), type(), toType};
                 },
                 [&](const NullType&) -> Value {
                     switch (toType) {
                         case ValueType::Boolean:
-                            return Value(false, m_line, m_column);
+                            return Value{false, m_line, m_column};
                         case ValueType::Null:
                             return *this;
                         case ValueType::Number:
-                            return Value(0.0, m_line, m_column);
+                            return Value{0.0, m_line, m_column};
                         case ValueType::String:
-                            return Value("", m_line, m_column);
+                            return Value{"", m_line, m_column};
                         case ValueType::Array:
-                            return Value(ArrayType(0), m_line, m_column);
+                            return Value{ArrayType{0}, m_line, m_column};
                         case ValueType::Map:
-                            return Value(MapType(), m_line, m_column);
+                            return Value{MapType{}, m_line, m_column};
                         case ValueType::Range:
                         case ValueType::Undefined:
                             break;
                     }
 
-                    throw ConversionError(describe(), type(), toType);
+                    throw ConversionError{describe(), type(), toType};
                 },
                 [&](const UndefinedType&) -> Value {
                     switch (toType) {
@@ -564,7 +564,7 @@ namespace TrenchBroom {
                             break;
                     }
 
-                    throw ConversionError(describe(), type(), toType);
+                    throw ConversionError{describe(), type(), toType};
                 }
             ), m_value);
         }
@@ -724,7 +724,7 @@ namespace TrenchBroom {
         }
 
         static std::vector<size_t> computeIndexArray(const Value& indexValue, const size_t indexableSize) {
-            std::vector<size_t> result;
+            auto result = std::vector<size_t>{};
             computeIndexArray(indexValue, indexableSize, result);
             return result;
         }
@@ -796,7 +796,7 @@ namespace TrenchBroom {
                             for (size_t i = 0; i < keys.size(); ++i) {
                                 const Value& keyValue = keys[i];
                                 if (keyValue.type() != ValueType::String) {
-                                    throw ConversionError(keyValue.describe(), keyValue.type(), ValueType::String);
+                                    throw ConversionError{keyValue.describe(), keyValue.type(), ValueType::String};
                                 }
                                 const std::string& key = keyValue.stringValue();
                                 const auto it = map.find(key);
@@ -863,7 +863,7 @@ namespace TrenchBroom {
                             if (index < str.length()) {
                                 result << str[index];
                             }
-                            return Value(result.str(), m_line, m_column);
+                            return Value{result.str(), m_line, m_column};
                         }
                         case ValueType::Array:
                         case ValueType::Range: {
@@ -876,7 +876,7 @@ namespace TrenchBroom {
                                     result << str[index];
                                 }
                             }
-                            return Value(result.str(), m_line, m_column);
+                            return Value{result.str(), m_line, m_column};
                         }
                         case ValueType::String:
                         case ValueType::Map:
@@ -892,7 +892,7 @@ namespace TrenchBroom {
                             const ArrayType& array = arrayValue();
                             const size_t index = computeIndex(indexValue, array.size());
                             if (index >= array.size()) {
-                                throw IndexOutOfBoundsError(*this, indexValue, index);
+                                throw IndexOutOfBoundsError{*this, indexValue, index};
                             }
                             return array[index];
                         }
@@ -900,16 +900,16 @@ namespace TrenchBroom {
                         case ValueType::Range: {
                             const ArrayType& array = arrayValue();
                             const std::vector<size_t> indices = computeIndexArray(indexValue, array.size());
-                            ArrayType result;
+                            auto result = ArrayType{};
                             result.reserve(indices.size());
                             for (size_t i = 0; i < indices.size(); ++i) {
                                 const size_t index = indices[i];
                                 if (index >= array.size()) {
-                                    throw IndexOutOfBoundsError(*this, indexValue, index);
+                                    throw IndexOutOfBoundsError{*this, indexValue, index};
                                 }
                                 result.push_back(array[index]);
                             }
-                            return Value(std::move(result), m_line, m_column);
+                            return Value{std::move(result), m_line, m_column};
                         }
                         case ValueType::String:
                         case ValueType::Map:
@@ -923,9 +923,9 @@ namespace TrenchBroom {
                         case ValueType::String: {
                             const MapType& map = mapValue();
                             const std::string& key = indexValue.stringValue();
-                            const MapType::const_iterator it = map.find(key);
+                            const auto it = map.find(key);
                             if (it == std::end(map)) {
-                                return Value(UndefinedType::Value);
+                                return Value{UndefinedType::Value};
                             }
                             return it->second;
                         }
@@ -936,15 +936,15 @@ namespace TrenchBroom {
                             for (size_t i = 0; i < keys.size(); ++i) {
                                 const Value& keyValue = keys[i];
                                 if (keyValue.type() != ValueType::String) {
-                                    throw ConversionError(keyValue.describe(), keyValue.type(), ValueType::String);
+                                    throw ConversionError{keyValue.describe(), keyValue.type(), ValueType::String};
                                 }
                                 const std::string& key = keyValue.stringValue();
-                                const MapType::const_iterator it = map.find(key);
+                                const auto it = map.find(key);
                                 if (it != std::end(map)) {
                                     result.insert(std::make_pair(key, it->second));
                                 }
                             }
-                            return Value(std::move(result), m_line, m_column);
+                            return Value{std::move(result), m_line, m_column};
                         }
                         case ValueType::Boolean:
                         case ValueType::Number:
@@ -963,7 +963,7 @@ namespace TrenchBroom {
                     break;
             }
 
-            throw IndexError(*this, indexValue);
+            throw IndexError{*this, indexValue};
         }
         
         Value Value::operator[](const size_t index) const {
@@ -974,12 +974,12 @@ namespace TrenchBroom {
                     if (index < str.length()) {
                         result << str[index];
                     }
-                    return Value(result.str());
+                    return Value{result.str()};
                 }
                 case ValueType::Array: {
                     const ArrayType& array = arrayValue();
                     if (index >= array.size()) {
-                        throw IndexOutOfBoundsError(*this, index);
+                        throw IndexOutOfBoundsError{*this, index};
                     }
                     return array[index];
                 }
@@ -992,7 +992,7 @@ namespace TrenchBroom {
                     break;
             }
 
-            throw IndexError(*this, index);
+            throw IndexError{*this, index};
         }
         
         Value Value::operator[](const int index) const {
@@ -1010,7 +1010,7 @@ namespace TrenchBroom {
                     const MapType& map = mapValue();
                     const auto it = map.find(key);
                     if (it == std::end(map)) {
-                        return Value(NullType::Value);
+                        return Value{NullType::Value};
                     } else {
                         return it->second;
                     }
@@ -1025,7 +1025,7 @@ namespace TrenchBroom {
                     break;
             }
 
-            throw IndexError(*this, key);
+            throw IndexError{*this, key};
         }
 
         Value::operator bool() const {
@@ -1041,7 +1041,7 @@ namespace TrenchBroom {
                 case ValueType::Undefined:
                     break;
             }
-            throw ConversionError(describe(), type(), ValueType::Boolean);
+            throw ConversionError{describe(), type(), ValueType::Boolean};
         }
     
         std::ostream& operator<<(std::ostream& stream, const Value& value) {
@@ -1053,7 +1053,7 @@ namespace TrenchBroom {
             switch (v.type()) {
                 case ValueType::Boolean:
                 case ValueType::Number:
-                    return Value(v.convertTo(ValueType::Number).numberValue());
+                    return Value{v.convertTo(ValueType::Number).numberValue()};
                 case ValueType::String:
                 case ValueType::Array:
                 case ValueType::Map:
@@ -1062,14 +1062,14 @@ namespace TrenchBroom {
                 case ValueType::Undefined:
                     break;
             }
-            throw EvaluationError("Cannot apply unary plus to value '" + v.describe() + "' of type '" + v.typeName());
+            throw EvaluationError{"Cannot apply unary plus to value '" + v.describe() + "' of type '" + v.typeName()};
         }
 
         Value operator-(const Value& v) {
             switch (v.type()) {
                 case ValueType::Boolean:
                 case ValueType::Number:
-                    return Value(-v.convertTo(ValueType::Number).numberValue());
+                    return Value{-v.convertTo(ValueType::Number).numberValue()};
                 case ValueType::String:
                 case ValueType::Array:
                 case ValueType::Map:
@@ -1078,7 +1078,7 @@ namespace TrenchBroom {
                 case ValueType::Undefined:
                     break;
             }
-            throw EvaluationError("Cannot negate value '" + v.describe() + "' of type '" + v.typeName());
+            throw EvaluationError{"Cannot negate value '" + v.describe() + "' of type '" + v.typeName()};
         }
     
 
@@ -1089,7 +1089,7 @@ namespace TrenchBroom {
                     switch (rhs.type()) {
                         case ValueType::Boolean:
                         case ValueType::Number:
-                            return Value(lhs.convertTo(ValueType::Number).numberValue() + rhs.convertTo(ValueType::Number).numberValue());
+                            return Value{lhs.convertTo(ValueType::Number).numberValue() + rhs.convertTo(ValueType::Number).numberValue()};
                         case ValueType::String:
                         case ValueType::Array:
                         case ValueType::Map:
@@ -1102,7 +1102,7 @@ namespace TrenchBroom {
                 case ValueType::String:
                     switch (rhs.type()) {
                         case ValueType::String:
-                            return Value(lhs.convertTo(ValueType::String).stringValue() + rhs.convertTo(ValueType::String).stringValue());
+                            return Value{lhs.convertTo(ValueType::String).stringValue() + rhs.convertTo(ValueType::String).stringValue()};
                         case ValueType::Boolean:
                         case ValueType::Number:
                         case ValueType::Array:
@@ -1116,7 +1116,7 @@ namespace TrenchBroom {
                 case ValueType::Array:
                     switch (rhs.type()) {
                         case ValueType::Array:
-                            return Value(kdl::vec_concat(lhs.arrayValue(), rhs.arrayValue()));
+                            return Value{kdl::vec_concat(lhs.arrayValue(), rhs.arrayValue())};
                         case ValueType::Boolean:
                         case ValueType::Number:
                         case ValueType::String:
@@ -1130,7 +1130,7 @@ namespace TrenchBroom {
                 case ValueType::Map:
                     switch (rhs.type()) {
                         case ValueType::Map:
-                            return Value(kdl::map_union(lhs.mapValue(), rhs.mapValue()));
+                            return Value{kdl::map_union(lhs.mapValue(), rhs.mapValue())};
                         case ValueType::Boolean:
                         case ValueType::Number:
                         case ValueType::String:
@@ -1147,7 +1147,7 @@ namespace TrenchBroom {
                     break;
             }
 
-            throw EvaluationError("Cannot add value '" + rhs.describe() + "' of type '" + typeName(rhs.type()) + " to value '" + lhs.describe() + "' of type '" + typeName(lhs.type()) + "'");
+            throw EvaluationError{"Cannot add value '" + rhs.describe() + "' of type '" + typeName(rhs.type()) + " to value '" + lhs.describe() + "' of type '" + typeName(lhs.type()) + "'"};
         }
     
         Value operator-(const Value& lhs, const Value& rhs) {
@@ -1157,7 +1157,7 @@ namespace TrenchBroom {
                     switch (rhs.type()) {
                         case ValueType::Boolean:
                         case ValueType::Number:
-                            return Value(lhs.convertTo(ValueType::Number).numberValue() - rhs.convertTo(ValueType::Number).numberValue());
+                            return Value{lhs.convertTo(ValueType::Number).numberValue() - rhs.convertTo(ValueType::Number).numberValue()};
                         case ValueType::String:
                         case ValueType::Array:
                         case ValueType::Map:
@@ -1176,7 +1176,7 @@ namespace TrenchBroom {
                     break;
             }
 
-            throw EvaluationError("Cannot subtract value '" + rhs.describe() + "' of type '" + typeName(rhs.type()) + " from value '" + lhs.describe() + "' of type '" + typeName(lhs.type()) + "'");
+            throw EvaluationError{"Cannot subtract value '" + rhs.describe() + "' of type '" + typeName(rhs.type()) + " from value '" + lhs.describe() + "' of type '" + typeName(lhs.type()) + "'"};
         }
     
         Value operator*(const Value& lhs, const Value& rhs) {
@@ -1186,7 +1186,7 @@ namespace TrenchBroom {
                     switch (rhs.type()) {
                         case ValueType::Boolean:
                         case ValueType::Number:
-                            return Value(lhs.convertTo(ValueType::Number).numberValue() * rhs.convertTo(ValueType::Number).numberValue());
+                            return Value{lhs.convertTo(ValueType::Number).numberValue() * rhs.convertTo(ValueType::Number).numberValue()};
                         case ValueType::String:
                         case ValueType::Array:
                         case ValueType::Map:
@@ -1205,7 +1205,7 @@ namespace TrenchBroom {
                     break;
             }
 
-            throw EvaluationError("Cannot subtract value '" + rhs.describe() + "' of type '" + typeName(rhs.type()) + " from value '" + lhs.describe() + "' of type '" + typeName(lhs.type()) + "'");
+            throw EvaluationError{"Cannot subtract value '" + rhs.describe() + "' of type '" + typeName(rhs.type()) + " from value '" + lhs.describe() + "' of type '" + typeName(lhs.type()) + "'"};
         }
     
         Value operator/(const Value& lhs, const Value& rhs) {
@@ -1215,7 +1215,7 @@ namespace TrenchBroom {
                     switch (rhs.type()) {
                         case ValueType::Boolean:
                         case ValueType::Number:
-                            return Value(lhs.convertTo(ValueType::Number).numberValue() / rhs.convertTo(ValueType::Number).numberValue());
+                            return Value{lhs.convertTo(ValueType::Number).numberValue() / rhs.convertTo(ValueType::Number).numberValue()};
                         case ValueType::String:
                         case ValueType::Array:
                         case ValueType::Map:
@@ -1234,7 +1234,7 @@ namespace TrenchBroom {
                     break;
             }
 
-            throw EvaluationError("Cannot subtract value '" + rhs.describe() + "' of type '" + typeName(rhs.type()) + " from value '" + lhs.describe() + "' of type '" + typeName(lhs.type()) + "'");
+            throw EvaluationError{"Cannot subtract value '" + rhs.describe() + "' of type '" + typeName(rhs.type()) + " from value '" + lhs.describe() + "' of type '" + typeName(lhs.type()) + "'"};
         }
     
         Value operator%(const Value& lhs, const Value& rhs) {
@@ -1244,7 +1244,7 @@ namespace TrenchBroom {
                     switch (rhs.type()) {
                         case ValueType::Boolean:
                         case ValueType::Number:
-                            return Value(std::fmod(lhs.convertTo(ValueType::Number).numberValue(), rhs.convertTo(ValueType::Number).numberValue()));
+                            return Value{std::fmod(lhs.convertTo(ValueType::Number).numberValue(), rhs.convertTo(ValueType::Number).numberValue())};
                         case ValueType::String:
                         case ValueType::Array:
                         case ValueType::Map:
@@ -1263,13 +1263,13 @@ namespace TrenchBroom {
                     break;
             }
 
-            throw EvaluationError("Cannot compute moduls of value '" + lhs.describe() + "' of type '" + typeName(lhs.type()) + " and value '" + rhs.describe() + "' of type '" + typeName(rhs.type()) + "'");
+            throw EvaluationError{"Cannot compute moduls of value '" + lhs.describe() + "' of type '" + typeName(lhs.type()) + " and value '" + rhs.describe() + "' of type '" + typeName(rhs.type()) + "'"};
         }
     
         Value operator!(const Value& v) {
             switch (v.type()) {
                 case ValueType::Boolean:
-                    return Value(!v.booleanValue());
+                    return Value{!v.booleanValue()};
                 case ValueType::Number:
                 case ValueType::String:
                 case ValueType::Array:
@@ -1279,7 +1279,7 @@ namespace TrenchBroom {
                 case ValueType::Undefined:
                     break;
             }
-            throw ConversionError(v.describe(), v.type(), ValueType::Boolean);
+            throw ConversionError{v.describe(), v.type(), ValueType::Boolean};
         }
     
         bool operator==(const Value& lhs, const Value& rhs) {
@@ -1414,7 +1414,7 @@ namespace TrenchBroom {
                     }
                     break;
             }
-            throw EvaluationError("Cannot compare value '" + lhs.describe() + "' of type '" + typeName(lhs.type()) + " to value '" + rhs.describe() + "' of type '" + typeName(rhs.type()) + "'");
+            throw EvaluationError{"Cannot compare value '" + lhs.describe() + "' of type '" + typeName(lhs.type()) + " to value '" + rhs.describe() + "' of type '" + typeName(rhs.type()) + "'"};
         }
 
         int compareAsBooleans(const Value& lhs, const Value& rhs) {
@@ -1444,7 +1444,7 @@ namespace TrenchBroom {
         Value operator~(const Value& v) {
             switch (v.type()) {
                 case ValueType::Number:
-                    return Value(~v.integerValue());
+                    return Value{~v.integerValue()};
                 case ValueType::Boolean:
                 case ValueType::String:
                 case ValueType::Array:
@@ -1454,52 +1454,52 @@ namespace TrenchBroom {
                 case ValueType::Undefined:
                     break;
             }
-            throw ConversionError(v.describe(), v.type(), ValueType::Boolean);
+            throw ConversionError{v.describe(), v.type(), ValueType::Boolean};
         }
 
         Value operator&(const Value& lhs, const Value& rhs) {
             if (lhs.convertibleTo(ValueType::Number) && rhs.convertibleTo(ValueType::Number)) {
                 const IntegerType lhsInt = lhs.convertTo(ValueType::Number).integerValue();
                 const IntegerType rhsInt = rhs.convertTo(ValueType::Number).integerValue();
-                return Value(lhsInt & rhsInt);
+                return Value{lhsInt & rhsInt};
             }
-            throw EvaluationError("Cannot apply operator & to '" + lhs.describe() + "' of type '" + typeName(lhs.type()) + " and '" + rhs.describe() + "' of type '" + typeName(rhs.type()) + "'");
+            throw EvaluationError{"Cannot apply operator & to '" + lhs.describe() + "' of type '" + typeName(lhs.type()) + " and '" + rhs.describe() + "' of type '" + typeName(rhs.type()) + "'"};
         }
 
         Value operator|(const Value& lhs, const Value& rhs) {
             if (lhs.convertibleTo(ValueType::Number) && rhs.convertibleTo(ValueType::Number)) {
                 const IntegerType lhsInt = lhs.convertTo(ValueType::Number).integerValue();
                 const IntegerType rhsInt = rhs.convertTo(ValueType::Number).integerValue();
-                return Value(lhsInt | rhsInt);
+                return Value{lhsInt | rhsInt};
             }
-            throw EvaluationError("Cannot apply operator | to '" + lhs.describe() + "' of type '" + typeName(lhs.type()) + " and '" + rhs.describe() + "' of type '" + typeName(rhs.type()) + "'");
+            throw EvaluationError{"Cannot apply operator | to '" + lhs.describe() + "' of type '" + typeName(lhs.type()) + " and '" + rhs.describe() + "' of type '" + typeName(rhs.type()) + "'"};
         }
 
         Value operator^(const Value& lhs, const Value& rhs) {
             if (lhs.convertibleTo(ValueType::Number) && rhs.convertibleTo(ValueType::Number)) {
                 const IntegerType lhsInt = lhs.convertTo(ValueType::Number).integerValue();
                 const IntegerType rhsInt = rhs.convertTo(ValueType::Number).integerValue();
-                return Value(lhsInt ^ rhsInt);
+                return Value{lhsInt ^ rhsInt};
             }
-            throw EvaluationError("Cannot apply operator ^ to '" + lhs.describe() + "' of type '" + typeName(lhs.type()) + " and '" + rhs.describe() + "' of type '" + typeName(rhs.type()) + "'");
+            throw EvaluationError{"Cannot apply operator ^ to '" + lhs.describe() + "' of type '" + typeName(lhs.type()) + " and '" + rhs.describe() + "' of type '" + typeName(rhs.type()) + "'"};
         }
 
         Value operator<<(const Value& lhs, const Value& rhs) {
             if (lhs.convertibleTo(ValueType::Number) && rhs.convertibleTo(ValueType::Number)) {
                 const IntegerType lhsInt = lhs.convertTo(ValueType::Number).integerValue();
                 const IntegerType rhsInt = rhs.convertTo(ValueType::Number).integerValue();
-                return Value(lhsInt << rhsInt);
+                return Value{lhsInt << rhsInt};
             }
-            throw EvaluationError("Cannot apply operator << to '" + lhs.describe() + "' of type '" + typeName(lhs.type()) + " and '" + rhs.describe() + "' of type '" + typeName(rhs.type()) + "'");
+            throw EvaluationError{"Cannot apply operator << to '" + lhs.describe() + "' of type '" + typeName(lhs.type()) + " and '" + rhs.describe() + "' of type '" + typeName(rhs.type()) + "'"};
         }
 
         Value operator>>(const Value& lhs, const Value& rhs) {
             if (lhs.convertibleTo(ValueType::Number) && rhs.convertibleTo(ValueType::Number)) {
                 const IntegerType lhsInt = lhs.convertTo(ValueType::Number).integerValue();
                 const IntegerType rhsInt = rhs.convertTo(ValueType::Number).integerValue();
-                return Value(lhsInt >> rhsInt);
+                return Value{lhsInt >> rhsInt};
             }
-            throw EvaluationError("Cannot apply operator >> to '" + lhs.describe() + "' of type '" + typeName(lhs.type()) + " and '" + rhs.describe() + "' of type '" + typeName(rhs.type()) + "'");
+            throw EvaluationError{"Cannot apply operator >> to '" + lhs.describe() + "' of type '" + typeName(lhs.type()) + " and '" + rhs.describe() + "' of type '" + typeName(rhs.type()) + "'"};
         }
     }
 }

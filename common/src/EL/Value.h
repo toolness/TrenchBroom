@@ -79,9 +79,9 @@ namespace TrenchBroom {
         
             template <typename T>
             explicit Value(const std::vector<T>& value, const size_t line = 0u, const size_t column = 0u) :
-            m_value(makeArray(value, line, column)),
-            m_line(line),
-            m_column(column) {}
+            m_value{makeArray(value, line, column)},
+            m_line{line},
+            m_column{column} {}
             
             Value(Value value, size_t line, size_t column);
 
