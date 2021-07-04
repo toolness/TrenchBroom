@@ -73,7 +73,7 @@ namespace TrenchBroom {
         m_column{column} {}
         
         Value Expression::evaluate(const EvaluationContext& context) const {
-            return std::visit([&](const auto& e) { return e.evaluate(context); }, *m_expression);
+            return std::visit([&](const auto& e) { return Value{e.evaluate(context), *this}; }, *m_expression);
         }
 
         Expression Expression::optimize() const {

@@ -19,11 +19,13 @@
 
 #pragma once
 
+#include "EL/Expression.h"
 #include "EL/Types.h"
 
 // FIXME: try to remove some of these headers
 #include <iosfwd>
 #include <memory>
+#include <optional>
 #include <string>
 #include <variant>
 #include <vector>
@@ -48,33 +50,34 @@ namespace TrenchBroom {
         private:
             using VariantType = std::variant<BooleanType, StringType, NumberType, ArrayType, MapType, RangeType, NullType, UndefinedType>;
             std::shared_ptr<VariantType> m_value;
-            size_t m_line;
-            size_t m_column;
+            std::optional<Expression> m_expression;
         public:
             static const Value Null;
             static const Value Undefined;
             
             Value();
         
-            explicit Value(BooleanType value, size_t line = 0u, size_t column = 0u);
-            explicit Value(StringType value, size_t line = 0u, size_t column = 0u);
-            explicit Value(const char* value, size_t line = 0u, size_t column = 0u);
-            explicit Value(NumberType value, size_t line = 0u, size_t column = 0u);
-            explicit Value(int value, size_t line = 0u, size_t column = 0u);
-            explicit Value(long value, size_t line = 0u, size_t column = 0u);
-            explicit Value(size_t value, size_t line = 0u, size_t column = 0u);
-            explicit Value(ArrayType value, size_t line = 0u, size_t column = 0u);
-            explicit Value(MapType value, size_t line = 0u, size_t column = 0u);
-            explicit Value(RangeType value, size_t line = 0u, size_t column = 0u);
-            explicit Value(NullType value, size_t line = 0u, size_t column = 0u);
-            explicit Value(UndefinedType value, size_t line = 0u, size_t column = 0u);
+            explicit Value(BooleanType value, std::optional<Expression> expression = std::nullopt);
+            explicit Value(StringType value, std::optional<Expression> expression = std::nullopt);
+            explicit Value(const char* value, std::optional<Expression> expression = std::nullopt);
+            explicit Value(NumberType value, std::optional<Expression> expression = std::nullopt);
+            explicit Value(int value, std::optional<Expression> expression = std::nullopt);
+            explicit Value(long value, std::optional<Expression> expression = std::nullopt);
+            explicit Value(size_t value, std::optional<Expression> expression = std::nullopt);
+            explicit Value(ArrayType value, std::optional<Expression> expression = std::nullopt);
+            explicit Value(MapType value, std::optional<Expression> expression = std::nullopt);
+            explicit Value(RangeType value, std::optional<Expression> expression = std::nullopt);
+            explicit Value(NullType value, std::optional<Expression> expression = std::nullopt);
+            explicit Value(UndefinedType value, std::optional<Expression> expression = std::nullopt);
         
-            Value(Value value, size_t line, size_t column);
+            Value(Value value, std::optional<Expression> expression);
 
             ValueType type() const;
             std::string typeName() const;
             std::string describe() const;
             
+            const std::optional<Expression>& expression() const;
+
             size_t line() const;
             size_t column() const;
 

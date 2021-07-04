@@ -47,74 +47,59 @@ namespace TrenchBroom {
         const Value Value::Undefined = Value(UndefinedType::Value);
             
         Value::Value() :
-        m_value{std::make_shared<VariantType>(NullType::Value)},
-        m_line{0u},
-        m_column{0u} {}
+        m_value{std::make_shared<VariantType>(NullType::Value)} {}
 
-        Value::Value(const BooleanType value, const size_t line, const size_t column) :
+        Value::Value(const BooleanType value, std::optional<Expression> expression) :
         m_value{std::make_shared<VariantType>(value)},
-        m_line{line},
-        m_column{column} {}
+        m_expression{std::move(expression)} {}
 
-        Value::Value(StringType value, const size_t line, const size_t column) :
+        Value::Value(StringType value, std::optional<Expression> expression) :
         m_value{std::make_shared<VariantType>(std::move(value))},
-        m_line{line},
-        m_column{column} {}
+        m_expression{std::move(expression)} {}
 
-        Value::Value(const char* value, const size_t line, const size_t column) :
+        Value::Value(const char* value, std::optional<Expression> expression) :
         m_value{std::make_shared<VariantType>(StringType(value))},
-        m_line{line},
-        m_column{column} {}
+        m_expression{std::move(expression)} {}
 
-        Value::Value(const NumberType value, const size_t line, const size_t column) :
+        Value::Value(const NumberType value, std::optional<Expression> expression) :
         m_value{std::make_shared<VariantType>(value)},
-        m_line{line},
-        m_column{column} {}
+        m_expression{std::move(expression)} {}
 
-        Value::Value(const int value, const size_t line, const size_t column) :
+        Value::Value(const int value, std::optional<Expression> expression) :
         m_value{std::make_shared<VariantType>(static_cast<NumberType>(value))},
-        m_line{line},
-        m_column{column} {}
+        m_expression{std::move(expression)} {}
     
-        Value::Value(const long value, const size_t line, const size_t column) :
+        Value::Value(const long value, std::optional<Expression> expression) :
         m_value{std::make_shared<VariantType>(static_cast<NumberType>(value))},
-        m_line{line},
-        m_column{column} {}
+        m_expression{std::move(expression)} {}
     
-        Value::Value(const size_t value, const size_t line, const size_t column) :
+        Value::Value(const size_t value, std::optional<Expression> expression) :
         m_value{std::make_shared<VariantType>(static_cast<NumberType>(value))},
-        m_line{line},
-        m_column{column} {}
+        m_expression{std::move(expression)} {}
     
-        Value::Value(ArrayType value, const size_t line, const size_t column) :
+        Value::Value(ArrayType value, std::optional<Expression> expression) :
         m_value{std::make_shared<VariantType>(std::move(value))},
-        m_line{line},
-        m_column{column} {}
+        m_expression{std::move(expression)} {}
     
-        Value::Value(MapType value, const size_t line, const size_t column) :
+        Value::Value(MapType value, std::optional<Expression> expression) :
         m_value{std::make_shared<VariantType>(std::move(value))},
-        m_line{line},
-        m_column{column} {}
+        m_expression{std::move(expression)} {}
     
-        Value::Value(RangeType value, const size_t line, const size_t column) :
+        Value::Value(RangeType value, std::optional<Expression> expression) :
         m_value{std::make_shared<VariantType>(std::move(value))},
-        m_line{line},
-        m_column{column} {}
+        m_expression{std::move(expression)} {}
     
-        Value::Value(NullType value, const size_t line, const size_t column) :
+        Value::Value(NullType value, std::optional<Expression> expression) :
         m_value{std::make_shared<VariantType>(value)},
-        m_line{line},
-        m_column{column} {}
+        m_expression{std::move(expression)} {}
     
-        Value::Value(UndefinedType value, const size_t line, const size_t column) :
+        Value::Value(UndefinedType value, std::optional<Expression> expression) :
         m_value{std::make_shared<VariantType>(value)},
-        m_line{line},
-        m_column{column} {}
+        m_expression{std::move(expression)} {}
     
-        Value::Value(Value value, const size_t line, const size_t column) :
+        Value::Value(Value value, std::optional<Expression> expression) :
         m_value{std::move(value.m_value)},
-        m_line{line},
-        m_column{column} {}
+        m_expression{std::move(expression)} {}
         
         ValueType Value::type() const {
             return std::visit(kdl::overload(
@@ -136,13 +121,17 @@ namespace TrenchBroom {
         std::string Value::describe() const {
             return asString(false);
         }
+
+        const std::optional<Expression>& Value::expression() const {
+            return m_expression;
+        }
         
         size_t Value::line() const {
-            return m_line;
+            return m_expression ? m_expression->line() : 0u;
         }
         
         size_t Value::column() const {
-            return m_column;
+            return m_expression ? m_expression->column() : 0u;
         }
 
         const BooleanType& Value::booleanValue() const {
@@ -422,9 +411,9 @@ namespace TrenchBroom {
                         case ValueType::Boolean:
                             return *this;
                         case ValueType::String:
-                            return Value{b ? "true" : "false", m_line, m_column};
+                            return Value{b ? "true" : "false", m_expression};
                         case ValueType::Number:
-                            return Value{b ? 1.0 : 0.0, m_line, m_column};
+                            return Value{b ? 1.0 : 0.0, m_expression};
                         case ValueType::Array:
                         case ValueType::Map:
                         case ValueType::Range:
@@ -438,12 +427,12 @@ namespace TrenchBroom {
                 [&](const StringType& s) -> Value {
                     switch (toType) {
                         case ValueType::Boolean:
-                            return Value{!kdl::cs::str_is_equal(s, "false") && !s.empty(), m_line, m_column};
+                            return Value{!kdl::cs::str_is_equal(s, "false") && !s.empty(), m_expression};
                         case ValueType::String:
                             return *this;
                         case ValueType::Number: {
                             if (kdl::str_is_blank(s)) {
-                                return Value{0.0, m_line, m_column};
+                                return Value{0.0, m_expression};
                             }
                             const char* begin = s.c_str();
                             char* end;
@@ -451,7 +440,7 @@ namespace TrenchBroom {
                             if (value == 0.0 && end == begin) {
                                 throw ConversionError{describe(), type(), toType};
                             }
-                            return Value{value, m_line, m_column};
+                            return Value{value, m_expression};
                         }
                         case ValueType::Array:
                         case ValueType::Map:
@@ -466,9 +455,9 @@ namespace TrenchBroom {
                 [&](const NumberType& n) -> Value {
                     switch (toType) {
                         case ValueType::Boolean:
-                            return Value{n != 0.0, m_line, m_column};
+                            return Value{n != 0.0, m_expression};
                         case ValueType::String:
-                            return Value{describe(), m_line, m_column};
+                            return Value{describe(), m_expression};
                         case ValueType::Number:
                             return *this;
                         case ValueType::Array:
@@ -532,17 +521,17 @@ namespace TrenchBroom {
                 [&](const NullType&) -> Value {
                     switch (toType) {
                         case ValueType::Boolean:
-                            return Value{false, m_line, m_column};
+                            return Value{false, m_expression};
                         case ValueType::Null:
                             return *this;
                         case ValueType::Number:
-                            return Value{0.0, m_line, m_column};
+                            return Value{0.0, m_expression};
                         case ValueType::String:
-                            return Value{"", m_line, m_column};
+                            return Value{"", m_expression};
                         case ValueType::Array:
-                            return Value{ArrayType{0}, m_line, m_column};
+                            return Value{ArrayType{0}, m_expression};
                         case ValueType::Map:
-                            return Value{MapType{}, m_line, m_column};
+                            return Value{MapType{}, m_expression};
                         case ValueType::Range:
                         case ValueType::Undefined:
                             break;
@@ -863,7 +852,7 @@ namespace TrenchBroom {
                             if (index < str.length()) {
                                 result << str[index];
                             }
-                            return Value{result.str(), m_line, m_column};
+                            return Value{result.str(), m_expression};
                         }
                         case ValueType::Array:
                         case ValueType::Range: {
@@ -876,7 +865,7 @@ namespace TrenchBroom {
                                     result << str[index];
                                 }
                             }
-                            return Value{result.str(), m_line, m_column};
+                            return Value{result.str(), m_expression};
                         }
                         case ValueType::String:
                         case ValueType::Map:
@@ -909,7 +898,7 @@ namespace TrenchBroom {
                                 }
                                 result.push_back(array[index]);
                             }
-                            return Value{std::move(result), m_line, m_column};
+                            return Value{std::move(result), m_expression};
                         }
                         case ValueType::String:
                         case ValueType::Map:
@@ -944,7 +933,7 @@ namespace TrenchBroom {
                                     result.insert(std::make_pair(key, it->second));
                                 }
                             }
-                            return Value{std::move(result), m_line, m_column};
+                            return Value{std::move(result), m_expression};
                         }
                         case ValueType::Boolean:
                         case ValueType::Number:

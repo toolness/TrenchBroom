@@ -85,7 +85,7 @@ namespace TrenchBroom {
                     if (!range.empty()) {
                         array.reserve(array.size() + range.size() - 1u);
                         for (size_t i = 0u; i < range.size(); ++i) {
-                            array.emplace_back(range[i], value.line(), value.column());
+                            array.emplace_back(range[i], value.expression());
                         }
                     }
                 } else {
