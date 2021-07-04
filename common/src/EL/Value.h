@@ -50,16 +50,6 @@ namespace TrenchBroom {
             std::shared_ptr<VariantType> m_value;
             size_t m_line;
             size_t m_column;
-        private:
-            template <typename T>
-            static ArrayType makeArray(const std::vector<T>& values, const size_t line, const size_t column) {
-                ArrayType result;
-                result.reserve(values.size());
-                for (const auto& value : values) {
-                    result.emplace_back(value, line, column);
-                }
-                return result;
-            }
         public:
             static const Value Null;
             static const Value Undefined;
@@ -79,12 +69,6 @@ namespace TrenchBroom {
             explicit Value(NullType value, size_t line = 0u, size_t column = 0u);
             explicit Value(UndefinedType value, size_t line = 0u, size_t column = 0u);
         
-            template <typename T>
-            explicit Value(const std::vector<T>& value, const size_t line = 0u, const size_t column = 0u) :
-            m_value{std::make_shared<VariantType>(makeArray(value, line, column))},
-            m_line{line},
-            m_column{column} {}
-            
             Value(Value value, size_t line, size_t column);
 
             ValueType type() const;
