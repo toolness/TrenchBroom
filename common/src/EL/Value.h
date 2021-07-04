@@ -89,9 +89,6 @@ namespace TrenchBroom {
             const MapType& mapValue() const;
             const RangeType& rangeValue() const;
 
-            bool null() const;
-            bool undefined() const;
-            
             const std::vector<std::string> asStringList() const;
             const std::vector<std::string> asStringSet() const;
 

@@ -106,12 +106,12 @@ namespace TrenchBroom {
 
             const auto evaluationContext = EvaluationContext{};
             for (const auto& expression : optimizedExpressions) {
-                auto value = expression.evaluate(evaluationContext);
-                if (value.undefined()) {
+                if (auto value = expression.evaluate(evaluationContext); value != Value::Undefined) {
+                    values.push_back(std::move(value));
+                } else {
                     return ArrayExpression{std::move(optimizedExpressions)};
                 }
 
-                values.push_back(std::move(value));
             }
             
             return LiteralExpression{Value{std::move(values)}};
@@ -161,11 +161,11 @@ namespace TrenchBroom {
 
             const auto evaluationContext = EvaluationContext{};
             for (const auto& [key, expression] : optimizedExpressions) {
-                auto value = expression.evaluate(evaluationContext);
-                if (value.undefined()) {
+                if (auto value = expression.evaluate(evaluationContext); value != Value::Undefined) {
+                    values.emplace(key, std::move(value));
+                } else {
                     return MapExpression{std::move(optimizedExpressions)};
                 }
-                values.emplace(key, std::move(value));
             }
             
             return LiteralExpression{Value{std::move(values)}};
@@ -198,7 +198,7 @@ namespace TrenchBroom {
         m_operand{std::move(operand)} {}
 
         static Value evaluateUnaryExpression(const UnaryOperator& operator_, const Value& operand) {
-            if (operand.undefined()) {
+            if (operand == Value::Undefined) {
                 return Value::Undefined;
             }
 
@@ -223,7 +223,7 @@ namespace TrenchBroom {
         
         ExpressionVariant UnaryExpression::optimize() const {
             auto optimizedOperand = m_operand.optimize();
-            if (auto value = evaluateUnaryExpression(m_operator, optimizedOperand.evaluate(EvaluationContext{})); !value.undefined()) {
+            if (auto value = evaluateUnaryExpression(m_operator, optimizedOperand.evaluate(EvaluationContext{})); value != Value::Undefined) {
                 return LiteralExpression{std::move(value)};
             }
             return UnaryExpression{m_operator, std::move(optimizedOperand)};
@@ -275,7 +275,7 @@ namespace TrenchBroom {
         }
 
         static Value evaluateBinaryExpression(const BinaryOperator operator_, const Value& leftOperand, const Value& rightOperand) {
-            if (leftOperand.undefined() || rightOperand.undefined()) {
+            if (leftOperand == Value::Undefined || rightOperand == Value::Undefined) {
                 return Value::Undefined;
             }
 
@@ -361,7 +361,7 @@ namespace TrenchBroom {
             auto leftValue = optimizedLeftOperand.evaluate(evaluationContext);
             auto rightValue = optimizedRightOperand.evaluate(evaluationContext);
 
-            if (auto value = evaluateBinaryExpression(m_operator, leftValue, rightValue); !value.undefined()) {
+            if (auto value = evaluateBinaryExpression(m_operator, leftValue, rightValue); value != Value::Undefined) {
                 return LiteralExpression{std::move(value)};
             }
 
@@ -505,12 +505,12 @@ namespace TrenchBroom {
             auto optimizedRightOperand = m_rightOperand.optimize();
 
             auto evaluationContext = EvaluationContext{};
-            if (auto leftValue = optimizedLeftOperand.evaluate(evaluationContext); !leftValue.undefined()) {
+            if (auto leftValue = optimizedLeftOperand.evaluate(evaluationContext); leftValue != Value::Undefined) {
                 auto stack = EvaluationStack{evaluationContext};
                 stack.declareVariable(AutoRangeParameterName(), Value(leftValue.length() - 1u));
 
-                if (auto rightValue = optimizedRightOperand.evaluate(stack); !rightValue.undefined()) {
-                    if (auto value = leftValue[rightValue]; !value.undefined()) {
+                if (auto rightValue = optimizedRightOperand.evaluate(stack); rightValue != Value::Undefined) {
+                    if (auto value = leftValue[rightValue]; value != Value::Undefined) {
                         return LiteralExpression{std::move(value)};
                     }
                 }
@@ -537,8 +537,7 @@ namespace TrenchBroom {
 
         Value SwitchExpression::evaluate(const EvaluationContext& context) const {
             for (const auto& case_ : m_cases) {
-                auto result = case_.evaluate(context);
-                if (!result.undefined()) {
+                if (auto result = case_.evaluate(context); result != Value::Undefined) {
                     return result;
                 }
             }
@@ -551,7 +550,7 @@ namespace TrenchBroom {
             }
 
             auto optimizedExpressions = kdl::vec_transform(m_cases, [](const auto& expression) { return expression.optimize(); });
-            if (auto firstValue = optimizedExpressions.front().evaluate(EvaluationContext{}); !firstValue.undefined()) {
+            if (auto firstValue = optimizedExpressions.front().evaluate(EvaluationContext{}); firstValue != Value::Undefined) {
                 return LiteralExpression{std::move(firstValue)};
             }
 

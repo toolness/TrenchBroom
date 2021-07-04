@@ -216,14 +216,6 @@ namespace TrenchBroom {
             ), *m_value);
         }
         
-        bool Value::null() const {
-            return type() == ValueType::Null;
-        }
-        
-        bool Value::undefined() const {
-            return type() == ValueType::Undefined;
-        }
-        
         const std::vector<std::string> Value::asStringList() const {
             const ArrayType& array = arrayValue();
             auto result = std::vector<std::string>{};
