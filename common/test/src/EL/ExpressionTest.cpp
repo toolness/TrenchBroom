@@ -34,14 +34,6 @@ namespace TrenchBroom {
     namespace EL {
         using V = Value;
 
-        static void assertOptimizable(const std::string& expression) {
-            CHECK(IO::ELParser::parseStrict(expression).optimize());
-        }
-
-        static void assertNotOptimizable(const std::string& expression) {
-            CHECK_FALSE(IO::ELParser::parseStrict(expression).optimize());
-        }
-
         static void evaluateAndAssert(const std::string& expression, const Value& result, const EvaluationContext& context) {
             CHECK(IO::ELParser::parseStrict(expression).evaluate(context) == result);
         }
@@ -62,7 +54,6 @@ namespace TrenchBroom {
         static void evalutateComparisonAndAssert(const std::string& op, bool result) {
             const std::string expression = "4 " + op + " 5";
             evaluateAndAssert(expression, result);
-            assertOptimizable(expression);
         }
         
         template <typename E>
@@ -130,10 +121,6 @@ namespace TrenchBroom {
             evaluateAndAssert("[]", ArrayType());
             evaluateAndAssert("[1, 2, 3]", array(1, 2, 3));
             evaluateAndAssert("[1, 2, x]", array(1, 2, "test"), "x", "test");
-
-            assertOptimizable("[]");
-            assertOptimizable("[1, 2, 3]");
-            assertNotOptimizable("[1, 2, x]");
         }
 
         TEST_CASE("ExpressionTest.testMapExpression", "[ExpressionTest]") {
@@ -141,19 +128,12 @@ namespace TrenchBroom {
             evaluateAndAssert("{ 'k': true }", map("k", true));
             evaluateAndAssert("{ 'k1': true, 'k2': 3, 'k3': 3 + 7 }", map("k1", true, "k2", 3, "k3", 10));
             evaluateAndAssert("{ 'k1': 'asdf', 'k2': x }", map("k1", "asdf", "k2", 55), "x", 55);
-
-            assertOptimizable("{}");
-            assertOptimizable("{ 'k': true }");
-            assertOptimizable("{ 'k1': true, 'k2': 3, 'k3': 3 + 7 }");
-            assertNotOptimizable("{ 'k1': 'asdf', 'k2': x }");
         }
 
         TEST_CASE("ExpressionTest.testAdditionOperator", "[ExpressionTest]") {
             evaluateAndAssert("2 + 3", 5);
             evaluateAndAssert("-2 + 3", 1);
             evaluateAndAssert("2 + 3 + 4", 9);
-            assertOptimizable("2 + 3");
-
             evaluateAndAssert("'as' + 'df'", "asdf");
         }
 
@@ -161,21 +141,18 @@ namespace TrenchBroom {
             evaluateAndAssert("2 - 3", -1);
             evaluateAndAssert("-2 - 3", -5);
             evaluateAndAssert("2 - 3 - 4", -5);
-            assertOptimizable("2 - 3");
         }
 
         TEST_CASE("ExpressionTest.testMultiplicationOperator", "[ExpressionTest]") {
             evaluateAndAssert("2 * 3", 6);
             evaluateAndAssert("-2 * 3", -6);
             evaluateAndAssert("2 * 3 * 4", 24);
-            assertOptimizable("2 * 3");
         }
 
         TEST_CASE("ExpressionTest.testDivisionOperator", "[ExpressionTest]") {
             evaluateAndAssert("2 / 3", 2.0 / 3.0);
             evaluateAndAssert("-2 / 3", -2.0 / 3.0);
             evaluateAndAssert("2 / 3 / 4", 2.0 / 3.0 / 4.0);
-            assertOptimizable("2 / 3");
         }
 
         TEST_CASE("ExpressionTest.testModulusOperator", "[ExpressionTest]") {
@@ -183,7 +160,6 @@ namespace TrenchBroom {
             evaluateAndAssert("-2 % 3", std::fmod(-2.0, 3.0));
             evaluateAndAssert("13 % 8 % 4", std::fmod(std::fmod(13.0, 8.0), 4.0));
             evaluateAndAssert("2 % 0", std::fmod(2.0, 0.0));
-            assertOptimizable("2 % 3");
         }
 
         TEST_CASE("ExpressionTest.testLogicalNegationOperator", "[ExpressionTest]") {
@@ -201,7 +177,6 @@ namespace TrenchBroom {
             evaluateAndAssert("false &&  true", false);
             evaluateAndAssert(" true && false", false);
             evaluateAndAssert(" true &&  true",  true);
-            assertOptimizable("true && false");
         }
 
         TEST_CASE("ExpressionTest.testLogicalOrOperator", "[ExpressionTest]") {
@@ -209,7 +184,6 @@ namespace TrenchBroom {
             evaluateAndAssert("false ||  true",  true);
             evaluateAndAssert(" true || false",  true);
             evaluateAndAssert(" true ||  true",  true);
-            assertOptimizable("true || false");
         }
 
         void evalutateComparisonAndAssert(const std::string& op, bool result);
@@ -340,6 +314,27 @@ namespace TrenchBroom {
             evaluateAndAssert("true && false -> true", Value::Undefined);
             evaluateAndAssert("true && true -> false", false);
             evaluateAndAssert("2 + 3 < 2 + 4 -> 6 % 5", 1);
+        }
+
+        TEST_CASE("ExpressionTest.testOptimize") {
+            using T = std::tuple<std::string, ExpressionVariant>;
+
+            const auto
+                [expression,        optimizedExpression] = GENERATE(values<T>({
+                {"3 + 7",           LiteralExpression{Value{10}}},
+                {"[1, 2, 3]",       LiteralExpression{Value{ArrayType{Value{1}, Value{2}, Value{3}}}}},
+                {"[1 + 2, 2, a]",   ArrayExpression{{
+                                        Expression{LiteralExpression{Value{3}}, 0, 0}, 
+                                        Expression{LiteralExpression{Value{2}}, 0, 0}, 
+                                        Expression{VariableExpression{"a"}, 0, 0}}
+                                    }},
+                {"{a:1, b:2, c:3}", LiteralExpression{Value{MapType{{"a", Value{1}}, {"b", Value{2}}, {"c", Value{3}}}}}},
+            }));
+
+            CAPTURE(expression);
+
+            auto expectedExpression = std::visit([](const auto& e) { return Expression{e, 0, 0}; }, optimizedExpression);
+            CHECK(IO::ELParser::parseStrict(expression).optimize() == expectedExpression);
         }
     }
 }

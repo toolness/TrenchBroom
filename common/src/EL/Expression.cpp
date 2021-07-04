@@ -24,6 +24,7 @@
 #include "EL/EvaluationContext.h"
 
 #include <kdl/overload.h>
+#include <kdl/vector_utils.h>
 
 #include <algorithm>
 #include <sstream>
@@ -73,53 +74,25 @@ namespace TrenchBroom {
         m_line{line},
         m_column{column} {}
         
-        Expression::Expression(const Expression& other) :
-        m_expression{std::make_unique<ExpressionVariant>(*other.m_expression)},
-        m_line{other.m_line},
-        m_column{other.m_column} {}
-        
-        Expression::Expression(Expression&& other) noexcept = default;
-        
-        Expression& Expression::operator=(const Expression& other) {
-            if (&other != this) {
-                m_expression = std::make_unique<ExpressionVariant>(*other.m_expression);
-                m_line = other.m_line;
-                m_column = other.m_column;
-            }
-            
-            return *this;
-        }
-
-        Expression& Expression::operator=(Expression&& other) noexcept {
-            if (&other != this) {
-                m_expression = std::move(other.m_expression);
-                m_line = other.m_line;
-                m_column = other.m_column;
-            }
-
-            return *this;
-        }
-
-        Expression::~Expression() = default;
-
         Value Expression::evaluate(const EvaluationContext& context) const {
             return std::visit([&](const auto& e) { return e.evaluate(context); }, *m_expression);
         }
 
-        bool Expression::optimize() {
-            auto replacement = std::visit(kdl::overload(
-                [](LiteralExpression& e) -> std::optional<LiteralExpression> { return e; },
-                [](VariableExpression&)  -> std::optional<LiteralExpression> { return std::nullopt; },
-                [](auto& e)              -> std::optional<LiteralExpression> { return e.optimize(); }
+        Expression Expression::optimize() const {
+            auto optimizedExpression = std::visit(kdl::overload(
+                [](const LiteralExpression& e) -> ExpressionVariant {
+                    return e;
+                },
+                [](const VariableExpression& e) -> ExpressionVariant {
+                    return e;
+                },
+                [](const auto& e) { 
+                    return e.optimize();
+                }
             ), *m_expression);
-            
-            if (replacement) {
-                *m_expression = std::move(*replacement);
-                return true;
-            } else {
-                return false;
-            }
-        }
+
+            return std::visit([&](auto&& e) { return Expression{std::move(e), m_line, m_column}; }, std::move(optimizedExpression));
+       }
 
         size_t Expression::line() const {
             return m_line;
@@ -272,17 +245,25 @@ namespace TrenchBroom {
             return Value{std::move(array)};
         }
         
-        std::optional<LiteralExpression> ArrayExpression::optimize() {
-            bool allOptimized = true;
-            for (auto& expression : m_elements) {
-                allOptimized &= expression.optimize();
+        ExpressionVariant ArrayExpression::optimize() const {
+            auto optimizedExpressions = kdl::vec_transform(m_elements, [](const auto& expression) {
+                return expression.optimize();
+            });
+            
+            auto values = ArrayType{};
+            values.reserve(m_elements.size());
+
+            const auto evaluationContext = EvaluationContext{};
+            for (const auto& expression : optimizedExpressions) {
+                auto value = expression.evaluate(evaluationContext);
+                if (value.undefined()) {
+                    return ArrayExpression{std::move(optimizedExpressions)};
+                }
+
+                values.push_back(std::move(value));
             }
             
-            if (allOptimized) {
-                return LiteralExpression{evaluate(EvaluationContext{})};
-            } else {
-                return std::nullopt;
-            }
+            return LiteralExpression{Value{std::move(values)}};
         }
 
         bool operator==(const ArrayExpression& lhs, const ArrayExpression& rhs) {
@@ -319,18 +300,24 @@ namespace TrenchBroom {
             return Value{std::move(map)};
         }
         
-        std::optional<LiteralExpression> MapExpression::optimize() {
-            bool allOptimized = true;
-            
-            for (auto& [key, expression] : m_elements) {
-                allOptimized &= expression.optimize();
+        ExpressionVariant MapExpression::optimize() const {
+            auto optimizedExpressions = std::map<std::string, Expression>{};
+            for (const auto& [key, expression] : m_elements) {
+                optimizedExpressions.emplace(key, expression.optimize());
+            }
+
+            auto values = MapType{};
+
+            const auto evaluationContext = EvaluationContext{};
+            for (const auto& [key, expression] : optimizedExpressions) {
+                auto value = expression.evaluate(evaluationContext);
+                if (value.undefined()) {
+                    return MapExpression{std::move(optimizedExpressions)};
+                }
+                values.emplace(key, std::move(value));
             }
             
-            if (allOptimized) {
-                return LiteralExpression{evaluate(EvaluationContext{})};
-            } else {
-                return std::nullopt;
-            }
+            return LiteralExpression{Value{std::move(values)}};
         }
 
         bool operator==(const MapExpression& lhs, const MapExpression& rhs) {
@@ -359,28 +346,36 @@ namespace TrenchBroom {
         m_operator{i_operator},
         m_operand{std::move(operand)} {}
 
-        Value UnaryExpression::evaluate(const EvaluationContext& context) const {
-            switch (m_operator) {
+        static Value evaluateUnaryExpression(const UnaryOperator& operator_, const Value& operand) {
+            if (operand.undefined()) {
+                return Value::Undefined;
+            }
+
+            switch (operator_) {
                 case UnaryOperator::Plus:
-                    return Value{+m_operand.evaluate(context)};
+                    return Value{+operand};
                 case UnaryOperator::Minus:
-                    return Value{-m_operand.evaluate(context)};
+                    return Value{-operand};
                 case UnaryOperator::LogicalNegation:
-                    return Value{!m_operand.evaluate(context)};
+                    return Value{!operand};
                 case UnaryOperator::BitwiseNegation:
-                    return Value{~m_operand.evaluate(context)};
+                    return Value{~operand};
                 case UnaryOperator::Group:
-                    return Value{m_operand.evaluate(context)};
+                    return Value{operand};
                 switchDefault();
             }
         }
+
+        Value UnaryExpression::evaluate(const EvaluationContext& context) const {
+            return evaluateUnaryExpression(m_operator, m_operand.evaluate(context));
+        }
         
-        std::optional<LiteralExpression> UnaryExpression::optimize() {
-            if (m_operand.optimize()) {
-                return LiteralExpression{evaluate(EvaluationContext{})};
-            } else {
-                return std::nullopt;
+        ExpressionVariant UnaryExpression::optimize() const {
+            auto optimizedOperand = m_operand.optimize();
+            if (auto value = evaluateUnaryExpression(m_operator, optimizedOperand.evaluate(EvaluationContext{})); !value.undefined()) {
+                return LiteralExpression{std::move(value)};
             }
+            return UnaryExpression{m_operator, std::move(optimizedOperand)};
         }
 
         bool operator==(const UnaryExpression& lhs, const UnaryExpression& rhs) {
@@ -428,50 +423,51 @@ namespace TrenchBroom {
             return Expression{BinaryExpression{BinaryOperator::Range, std::move(leftOperand), std::move(rightOperand)}, line, column};
         }
 
-        Value BinaryExpression::evaluate(const EvaluationContext& context) const {
-            switch (m_operator) {
+        static Value evaluateBinaryExpression(const BinaryOperator operator_, const Value& leftOperand, const Value& rightOperand) {
+            if (leftOperand.undefined() || rightOperand.undefined()) {
+                return Value::Undefined;
+            }
+
+            switch (operator_) {
                 case BinaryOperator::Addition:
-                    return Value{m_leftOperand.evaluate(context) + m_rightOperand.evaluate(context)};
+                    return Value{leftOperand + rightOperand};
                 case BinaryOperator::Subtraction:
-                    return Value{m_leftOperand.evaluate(context) - m_rightOperand.evaluate(context)};
+                    return Value{leftOperand - rightOperand};
                 case BinaryOperator::Multiplication:
-                    return Value{m_leftOperand.evaluate(context) * m_rightOperand.evaluate(context)};
+                    return Value{leftOperand * rightOperand};
                 case BinaryOperator::Division:
-                    return Value{m_leftOperand.evaluate(context) / m_rightOperand.evaluate(context)};
+                    return Value{leftOperand / rightOperand};
                 case BinaryOperator::Modulus:
-                    return Value{m_leftOperand.evaluate(context) % m_rightOperand.evaluate(context)};
+                    return Value{leftOperand % rightOperand};
                 case BinaryOperator::LogicalAnd:
-                    return Value{m_leftOperand.evaluate(context) && m_rightOperand.evaluate(context)};
+                    return Value{leftOperand && rightOperand};
                 case BinaryOperator::LogicalOr:
-                    return Value{m_leftOperand.evaluate(context) || m_rightOperand.evaluate(context)};
+                    return Value{leftOperand || rightOperand};
                 case BinaryOperator::BitwiseAnd:
-                    return Value{m_leftOperand.evaluate(context) & m_rightOperand.evaluate(context)};
+                    return Value{leftOperand & rightOperand};
                 case BinaryOperator::BitwiseXOr:
-                    return Value{m_leftOperand.evaluate(context) ^ m_rightOperand.evaluate(context)};
+                    return Value{leftOperand ^ rightOperand};
                 case BinaryOperator::BitwiseOr:
-                    return Value{m_leftOperand.evaluate(context) | m_rightOperand.evaluate(context)};
+                    return Value{leftOperand | rightOperand};
                 case BinaryOperator::BitwiseShiftLeft:
-                    return Value{m_leftOperand.evaluate(context) << m_rightOperand.evaluate(context)};
+                    return Value{leftOperand << rightOperand};
                 case BinaryOperator::BitwiseShiftRight:
-                    return Value{m_leftOperand.evaluate(context) >> m_rightOperand.evaluate(context)};
+                    return Value{leftOperand >> rightOperand};
                 case BinaryOperator::Less:
-                    return Value{m_leftOperand.evaluate(context) < m_rightOperand.evaluate(context)};
+                    return Value{leftOperand < rightOperand};
                 case BinaryOperator::LessOrEqual:
-                    return Value{m_leftOperand.evaluate(context) <= m_rightOperand.evaluate(context)};
+                    return Value{leftOperand <= rightOperand};
                 case BinaryOperator::Greater:
-                    return Value{m_leftOperand.evaluate(context) > m_rightOperand.evaluate(context)};
+                    return Value{leftOperand > rightOperand};
                 case BinaryOperator::GreaterOrEqual:
-                    return Value{m_leftOperand.evaluate(context) >= m_rightOperand.evaluate(context)};
+                    return Value{leftOperand >= rightOperand};
                 case BinaryOperator::Equal:
-                    return Value{m_leftOperand.evaluate(context) == m_rightOperand.evaluate(context)};
+                    return Value{leftOperand == rightOperand};
                 case BinaryOperator::NotEqual:
-                    return Value{m_leftOperand.evaluate(context) != m_rightOperand.evaluate(context)};
+                    return Value{leftOperand != rightOperand};
                 case BinaryOperator::Range: {
-                    const auto leftValue = m_leftOperand.evaluate(context);
-                    const auto rightValue = m_rightOperand.evaluate(context);
-                    
-                    const auto from = static_cast<long>(leftValue.convertTo(ValueType::Number).numberValue());
-                    const auto to = static_cast<long>(rightValue.convertTo(ValueType::Number).numberValue());
+                    const auto from = static_cast<long>(leftOperand.convertTo(ValueType::Number).numberValue());
+                    const auto to = static_cast<long>(rightOperand.convertTo(ValueType::Number).numberValue());
                     
                     auto range = RangeType{};
                     if (from <= to) {
@@ -492,9 +488,8 @@ namespace TrenchBroom {
                     return Value{std::move(range)};
                 }
                 case BinaryOperator::Case: {
-                    const auto leftValue = m_leftOperand.evaluate(context);
-                    if (leftValue.convertTo(ValueType::Boolean)) {
-                        return m_rightOperand.evaluate(context);
+                    if (leftOperand.convertTo(ValueType::Boolean)) {
+                        return rightOperand;
                     } else {
                         return Value::Undefined;
                     }
@@ -502,15 +497,24 @@ namespace TrenchBroom {
                 switchDefault();
             };
         }
+
+        Value BinaryExpression::evaluate(const EvaluationContext& context) const {
+            return evaluateBinaryExpression(m_operator, m_leftOperand.evaluate(context), m_rightOperand.evaluate(context));
+        }
         
-        std::optional<LiteralExpression> BinaryExpression::optimize() {
-            const auto leftOptimized = m_leftOperand.optimize();
-            const auto rightOptimized = m_rightOperand.optimize();
-            if (leftOptimized && rightOptimized) {
-                return LiteralExpression{evaluate(EvaluationContext{})};
-            } else {
-                return std::nullopt;
+        ExpressionVariant BinaryExpression::optimize() const {
+            auto optimizedLeftOperand = m_leftOperand.optimize();
+            auto optimizedRightOperand = m_rightOperand.optimize();
+
+            const auto evaluationContext = EvaluationContext{};
+            auto leftValue = optimizedLeftOperand.evaluate(evaluationContext);
+            auto rightValue = optimizedRightOperand.evaluate(evaluationContext);
+
+            if (auto value = evaluateBinaryExpression(m_operator, leftValue, rightValue); !value.undefined()) {
+                return LiteralExpression{std::move(value)};
             }
+
+            return BinaryExpression{m_operator, std::move(optimizedLeftOperand), std::move(optimizedRightOperand)};
         }
 
         size_t BinaryExpression::precedence() const {
@@ -645,12 +649,23 @@ namespace TrenchBroom {
             return leftValue[rightValue];
         }
         
-        std::optional<LiteralExpression> SubscriptExpression::optimize() {
-            if (m_leftOperand.optimize() && m_rightOperand.optimize()) {
-                return LiteralExpression{evaluate(EvaluationContext{})};
-            } else {
-                return std::nullopt;
+        ExpressionVariant SubscriptExpression::optimize() const {
+            auto optimizedLeftOperand = m_leftOperand.optimize();
+            auto optimizedRightOperand = m_rightOperand.optimize();
+
+            auto evaluationContext = EvaluationContext{};
+            if (auto leftValue = optimizedLeftOperand.evaluate(evaluationContext); !leftValue.undefined()) {
+                auto stack = EvaluationStack{evaluationContext};
+                stack.declareVariable(AutoRangeParameterName(), Value(leftValue.length() - 1u));
+
+                if (auto rightValue = optimizedRightOperand.evaluate(stack); !rightValue.undefined()) {
+                    if (auto value = leftValue[rightValue]; !value.undefined()) {
+                        return LiteralExpression{std::move(value)};
+                    }
+                }
             }
+
+            return SubscriptExpression{std::move(optimizedLeftOperand), std::move(optimizedRightOperand)};
         }
 
         bool operator==(const SubscriptExpression& lhs, const SubscriptExpression& rhs) {
@@ -679,20 +694,17 @@ namespace TrenchBroom {
             return Value::Undefined;
         }
         
-        std::optional<LiteralExpression> SwitchExpression::optimize() {
-            bool allOptimized = true;
-            
-            for (auto& case_ : m_cases) {
-                allOptimized &= case_.optimize();
-                if (allOptimized) {
-                    auto result = case_.evaluate(EvaluationContext{});
-                    if (!result.undefined()) {
-                        return LiteralExpression(std::move(result));
-                    }
-                }
+        ExpressionVariant SwitchExpression::optimize() const {
+            if (m_cases.empty()) {
+                return *this;
             }
-            
-            return std::nullopt;
+
+            auto optimizedExpressions = kdl::vec_transform(m_cases, [](const auto& expression) { return expression.optimize(); });
+            if (auto firstValue = optimizedExpressions.front().evaluate(EvaluationContext{}); !firstValue.undefined()) {
+                return LiteralExpression{std::move(firstValue)};
+            }
+
+            return SwitchExpression{std::move(optimizedExpressions)};
         }
 
         bool operator==(const SwitchExpression& lhs, const SwitchExpression& rhs) {

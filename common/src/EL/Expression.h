@@ -26,7 +26,6 @@
 #include <iosfwd>
 #include <map>
 #include <memory>
-#include <optional>
 #include <string>
 #include <variant>
 #include <vector>
@@ -43,15 +42,15 @@ namespace TrenchBroom {
         class BinaryExpression;
         class SubscriptExpression;
         class SwitchExpression;
-    
+
+        using ExpressionVariant = std::variant<
+            LiteralExpression, VariableExpression,
+            ArrayExpression, MapExpression,
+            UnaryExpression, BinaryExpression, SubscriptExpression, SwitchExpression>;
+
         class Expression {
         private:
-            using ExpressionVariant = std::variant<
-                LiteralExpression, VariableExpression,
-                ArrayExpression, MapExpression,
-                UnaryExpression, BinaryExpression, SubscriptExpression, SwitchExpression>;
-                
-            std::unique_ptr<ExpressionVariant> m_expression;
+            std::shared_ptr<ExpressionVariant> m_expression;
             size_t m_line;
             size_t m_column;
         public:
@@ -64,16 +63,8 @@ namespace TrenchBroom {
             Expression(SubscriptExpression expression, size_t line, size_t column);
             Expression(SwitchExpression expression, size_t line, size_t column);
             
-            Expression(const Expression& other);
-            Expression(Expression&& other) noexcept;
-            
-            Expression& operator=(const Expression& other);
-            Expression& operator=(Expression&& other) noexcept;
-            
-            ~Expression();
-
             Value evaluate(const EvaluationContext& context) const;
-            bool optimize();
+            Expression optimize() const;
 
             size_t line() const;
             size_t column() const;
@@ -121,7 +112,7 @@ namespace TrenchBroom {
             ArrayExpression(std::vector<Expression> elements);
             
             Value evaluate(const EvaluationContext& context) const;
-            std::optional<LiteralExpression> optimize();
+            ExpressionVariant optimize() const;
 
             friend bool operator==(const ArrayExpression& lhs, const ArrayExpression& rhs);
             friend bool operator!=(const ArrayExpression& lhs, const ArrayExpression& rhs);
@@ -135,7 +126,7 @@ namespace TrenchBroom {
             MapExpression(std::map<std::string, Expression> elements);
 
             Value evaluate(const EvaluationContext& context) const;
-            std::optional<LiteralExpression> optimize();
+            ExpressionVariant optimize() const;
 
             friend bool operator==(const MapExpression& lhs, const MapExpression& rhs);
             friend bool operator!=(const MapExpression& lhs, const MapExpression& rhs);
@@ -158,7 +149,7 @@ namespace TrenchBroom {
             UnaryExpression(UnaryOperator i_operator, Expression operand);
 
             Value evaluate(const EvaluationContext& context) const;
-            std::optional<LiteralExpression> optimize();
+            ExpressionVariant optimize() const;
 
             friend bool operator==(const UnaryExpression& lhs, const UnaryExpression& rhs);
             friend bool operator!=(const UnaryExpression& lhs, const UnaryExpression& rhs);
@@ -201,7 +192,7 @@ namespace TrenchBroom {
             static Expression createAutoRangeWithLeftOperand(Expression leftOperand, size_t line, size_t column);
 
             Value evaluate(const EvaluationContext& context) const;
-            std::optional<LiteralExpression> optimize();
+            ExpressionVariant optimize() const;
             
             size_t precedence() const;
 
@@ -220,7 +211,7 @@ namespace TrenchBroom {
             SubscriptExpression(Expression leftOperand, Expression rightOperand);
             
             Value evaluate(const EvaluationContext& context) const;
-            std::optional<LiteralExpression> optimize();
+            ExpressionVariant optimize() const;
 
             friend bool operator==(const SubscriptExpression& lhs, const SubscriptExpression& rhs);
             friend bool operator!=(const SubscriptExpression& lhs, const SubscriptExpression& rhs);
@@ -234,7 +225,7 @@ namespace TrenchBroom {
             SwitchExpression(std::vector<Expression> cases);
 
             Value evaluate(const EvaluationContext& context) const;
-            std::optional<LiteralExpression> optimize();
+            ExpressionVariant optimize() const;
 
             friend bool operator==(const SwitchExpression& lhs, const SwitchExpression& rhs);
             friend bool operator!=(const SwitchExpression& lhs, const SwitchExpression& rhs);
