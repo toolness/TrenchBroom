@@ -64,7 +64,7 @@ flagsStruct parseFlags(float v_float) {
 void main(void) {
     gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * position;
     
-    // Brushes are assumed to be in world space already (Face.vertsh also assumes this)
+    // Brushes are assumed to be in world space already (BrushFace.vertsh also assumes this)
     worldCoordinates = position;
 
     flagsStruct edgeFlags = parseFlags(flags);
