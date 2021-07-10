@@ -130,7 +130,6 @@ set(COMMON_SOURCE
         ${COMMON_SOURCE_DIR}/Model/Hit.cpp
         ${COMMON_SOURCE_DIR}/Model/HitAdapter.cpp
         ${COMMON_SOURCE_DIR}/Model/HitFilter.cpp
-        ${COMMON_SOURCE_DIR}/Model/HitQuery.cpp
         ${COMMON_SOURCE_DIR}/Model/HitType.cpp
         ${COMMON_SOURCE_DIR}/Model/InvalidTextureScaleIssueGenerator.cpp
         ${COMMON_SOURCE_DIR}/Model/Issue.cpp
@@ -300,6 +299,8 @@ set(COMMON_SOURCE
         ${COMMON_SOURCE_DIR}/View/CurrentGroupCommand.cpp
         ${COMMON_SOURCE_DIR}/View/CyclingMapView.cpp
         ${COMMON_SOURCE_DIR}/View/DirectoryTextureCollectionEditor.cpp
+        ${COMMON_SOURCE_DIR}/View/DragTracker.cpp
+        ${COMMON_SOURCE_DIR}/View/DropTracker.cpp
         ${COMMON_SOURCE_DIR}/View/EdgeTool.cpp
         ${COMMON_SOURCE_DIR}/View/EdgeToolController.cpp
         ${COMMON_SOURCE_DIR}/View/ElidedLabel.cpp
@@ -335,6 +336,7 @@ set(COMMON_SOURCE
         ${COMMON_SOURCE_DIR}/View/GetVersion.cpp
         ${COMMON_SOURCE_DIR}/View/GLContextManager.cpp
         ${COMMON_SOURCE_DIR}/View/Grid.cpp
+        ${COMMON_SOURCE_DIR}/View/HandleDragTracker.cpp
         ${COMMON_SOURCE_DIR}/View/ImageListBox.cpp
         ${COMMON_SOURCE_DIR}/View/InfoPanel.cpp
         ${COMMON_SOURCE_DIR}/View/InputEvent.cpp
@@ -367,6 +369,7 @@ set(COMMON_SOURCE
         ${COMMON_SOURCE_DIR}/View/MapViewToolBox.cpp
         ${COMMON_SOURCE_DIR}/View/ModEditor.cpp
         ${COMMON_SOURCE_DIR}/View/MousePreferencePane.cpp
+        ${COMMON_SOURCE_DIR}/View/MoveHandleDragTracker.cpp
         ${COMMON_SOURCE_DIR}/View/MoveObjectsTool.cpp
         ${COMMON_SOURCE_DIR}/View/MoveObjectsToolController.cpp
         ${COMMON_SOURCE_DIR}/View/MoveObjectsToolPage.cpp
@@ -457,6 +460,7 @@ set(COMMON_SOURCE
         ${COMMON_SOURCE_DIR}/FileLogger.cpp
         ${COMMON_SOURCE_DIR}/Exceptions.cpp
         ${COMMON_SOURCE_DIR}/Logger.cpp
+        ${COMMON_SOURCE_DIR}/NotifierConnection.cpp
         ${COMMON_SOURCE_DIR}/PreferenceManager.cpp
         ${COMMON_SOURCE_DIR}/Preference.cpp
         ${COMMON_SOURCE_DIR}/Preferences.cpp
@@ -606,7 +610,6 @@ set(COMMON_HEADER
         ${COMMON_SOURCE_DIR}/Model/Hit.h
         ${COMMON_SOURCE_DIR}/Model/HitAdapter.h
         ${COMMON_SOURCE_DIR}/Model/HitFilter.h
-        ${COMMON_SOURCE_DIR}/Model/HitQuery.h
         ${COMMON_SOURCE_DIR}/Model/HitType.h
         ${COMMON_SOURCE_DIR}/Model/IdType.h
         ${COMMON_SOURCE_DIR}/Model/InvalidTextureScaleIssueGenerator.h
@@ -806,6 +809,8 @@ set(COMMON_HEADER
         ${COMMON_SOURCE_DIR}/View/CurrentGroupCommand.h
         ${COMMON_SOURCE_DIR}/View/CyclingMapView.h
         ${COMMON_SOURCE_DIR}/View/DirectoryTextureCollectionEditor.h
+        ${COMMON_SOURCE_DIR}/View/DragTracker.h
+        ${COMMON_SOURCE_DIR}/View/DropTracker.h
         ${COMMON_SOURCE_DIR}/View/EdgeTool.h
         ${COMMON_SOURCE_DIR}/View/EdgeToolController.h
         ${COMMON_SOURCE_DIR}/View/ElidedLabel.h
@@ -841,6 +846,7 @@ set(COMMON_HEADER
         ${COMMON_SOURCE_DIR}/View/GetVersion.h
         ${COMMON_SOURCE_DIR}/View/GLContextManager.h
         ${COMMON_SOURCE_DIR}/View/Grid.h
+        ${COMMON_SOURCE_DIR}/View/HandleDragTracker.h
         ${COMMON_SOURCE_DIR}/View/ImageListBox.h
         ${COMMON_SOURCE_DIR}/View/InfoPanel.h
         ${COMMON_SOURCE_DIR}/View/InputEvent.h
@@ -874,10 +880,10 @@ set(COMMON_HEADER
         ${COMMON_SOURCE_DIR}/View/MapViewToolBox.h
         ${COMMON_SOURCE_DIR}/View/ModEditor.h
         ${COMMON_SOURCE_DIR}/View/MousePreferencePane.h
+        ${COMMON_SOURCE_DIR}/View/MoveHandleDragTracker.h
         ${COMMON_SOURCE_DIR}/View/MoveObjectsTool.h
         ${COMMON_SOURCE_DIR}/View/MoveObjectsToolController.h
         ${COMMON_SOURCE_DIR}/View/MoveObjectsToolPage.h
-        ${COMMON_SOURCE_DIR}/View/MoveToolController.h
         ${COMMON_SOURCE_DIR}/View/MultiCompletionLineEdit.h
         ${COMMON_SOURCE_DIR}/View/MultiMapView.h
         ${COMMON_SOURCE_DIR}/View/OnePaneMapView.h
@@ -971,6 +977,7 @@ set(COMMON_HEADER
         ${COMMON_SOURCE_DIR}/Logger.h
         ${COMMON_SOURCE_DIR}/Macros.h
         ${COMMON_SOURCE_DIR}/Notifier.h
+        ${COMMON_SOURCE_DIR}/NotifierConnection.h
         ${COMMON_SOURCE_DIR}/Preference.h
         ${COMMON_SOURCE_DIR}/PreferenceManager.h
         ${COMMON_SOURCE_DIR}/Preferences.h

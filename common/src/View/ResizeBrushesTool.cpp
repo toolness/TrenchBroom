@@ -29,8 +29,9 @@
 #include "Model/BrushFaceHandle.h"
 #include "Model/BrushGeometry.h"
 #include "Model/BrushNode.h"
+#include "Model/Hit.h"
 #include "Model/HitAdapter.h"
-#include "Model/HitQuery.h"
+#include "Model/HitFilter.h"
 #include "Model/PickResult.h"
 #include "Model/Polyhedron.h"
 #include "Renderer/Camera.h"
@@ -92,11 +93,7 @@ namespace TrenchBroom {
         m_document(std::move(document)),
         m_dragging(false),
         m_splitBrushes(false) {
-            bindObservers();
-        }
-
-        ResizeBrushesTool::~ResizeBrushesTool() {
-            unbindObservers();
+            connectObservers();
         }
 
         bool ResizeBrushesTool::applies() const {
@@ -105,8 +102,10 @@ namespace TrenchBroom {
         }
 
         Model::Hit ResizeBrushesTool::pick2D(const vm::ray3& pickRay, const Model::PickResult& pickResult) {
+            using namespace Model::HitFilters;
+
             auto document = kdl::mem_lock(m_document);
-            const auto& hit = pickResult.query().pickable().type(Model::BrushNode::BrushHitType).occluded().selected().first();
+            const auto& hit = pickResult.first(type(Model::BrushNode::BrushHitType) && selected());
             if (hit.isMatch()) {
                 return Model::Hit::NoHit;
             } else {
@@ -115,8 +114,10 @@ namespace TrenchBroom {
         }
 
         Model::Hit ResizeBrushesTool::pick3D(const vm::ray3& pickRay, const Model::PickResult& pickResult) {
+            using namespace Model::HitFilters;
+
             auto document = kdl::mem_lock(m_document);
-            const auto& hit = pickResult.query().pickable().type(Model::BrushNode::BrushHitType).occluded().selected().first();
+            const auto& hit = pickResult.first(type(Model::BrushNode::BrushHitType) && selected());
             if (const auto faceHandle = hitToFaceHandle(hit)) {
                 return Model::Hit(Resize3DHitType, hit.distance(), hit.hitPoint(), *faceHandle);
             } else {
@@ -209,6 +210,8 @@ namespace TrenchBroom {
         }
 
         void ResizeBrushesTool::updateProposedDragHandles(const Model::PickResult& pickResult) {
+            using namespace Model::HitFilters;
+
             if (m_dragging) {
                 // FIXME: this should be turned into an ensure failure, but it's easy to make it fail
                 // currently by spamming drags/modifiers.
@@ -217,7 +220,7 @@ namespace TrenchBroom {
                 return;
             }
 
-            const auto& hit = pickResult.query().type(Resize2DHitType | Resize3DHitType).occluded().first();
+            const auto& hit = pickResult.first(type(Resize2DHitType | Resize3DHitType));
             auto newDragHandles = getDragHandles(hit);
             if (newDragHandles != m_proposedDragHandles) {
                 refreshViews();
@@ -296,9 +299,11 @@ namespace TrenchBroom {
          * Starts resizing the faces determined by the previous call to updateProposedDragHandles
          */
         bool ResizeBrushesTool::beginResize(const Model::PickResult& pickResult, const bool split) {
+            using namespace Model::HitFilters;
+
             ensure(!m_dragging, "may not be called during a drag");
 
-            const auto& hit = pickResult.query().type(Resize2DHitType | Resize3DHitType).occluded().first();
+            const auto& hit = pickResult.first(type(Resize2DHitType | Resize3DHitType));
             if (!hit.isMatch()) {
                 return false;
             }
@@ -363,9 +368,11 @@ namespace TrenchBroom {
         }
 
         bool ResizeBrushesTool::beginMove(const Model::PickResult& pickResult) {
+            using namespace Model::HitFilters;
+            
             ensure(!m_dragging, "may not be called during a drag");
 
-            const auto& hit = pickResult.query().type(Resize2DHitType).occluded().first();
+            const auto& hit = pickResult.first(type(Resize2DHitType));
             if (!hit.isMatch()) {
                 return false;
             }
@@ -630,22 +637,12 @@ namespace TrenchBroom {
             }
         }
 
-        void ResizeBrushesTool::bindObservers() {
+        void ResizeBrushesTool::connectObservers() {
             auto document = kdl::mem_lock(m_document);
-            document->nodesWereAddedNotifier.addObserver(this, &ResizeBrushesTool::nodesDidChange);
-            document->nodesWillChangeNotifier.addObserver(this, &ResizeBrushesTool::nodesDidChange);
-            document->nodesWillBeRemovedNotifier.addObserver(this, &ResizeBrushesTool::nodesDidChange);
-            document->selectionDidChangeNotifier.addObserver(this, &ResizeBrushesTool::selectionDidChange);
-        }
-
-        void ResizeBrushesTool::unbindObservers() {
-            if (!kdl::mem_expired(m_document)) {
-                auto document = kdl::mem_lock(m_document);
-                document->nodesWereAddedNotifier.removeObserver(this, &ResizeBrushesTool::nodesDidChange);
-                document->nodesWillChangeNotifier.removeObserver(this, &ResizeBrushesTool::nodesDidChange);
-                document->nodesWillBeRemovedNotifier.removeObserver(this, &ResizeBrushesTool::nodesDidChange);
-                document->selectionDidChangeNotifier.removeObserver(this, &ResizeBrushesTool::selectionDidChange);
-            }
+            m_notifierConnection += document->nodesWereAddedNotifier.connect(this, &ResizeBrushesTool::nodesDidChange);
+            m_notifierConnection += document->nodesWillChangeNotifier.connect(this, &ResizeBrushesTool::nodesDidChange);
+            m_notifierConnection += document->nodesWillBeRemovedNotifier.connect(this, &ResizeBrushesTool::nodesDidChange);
+            m_notifierConnection += document->selectionDidChangeNotifier.connect(this, &ResizeBrushesTool::selectionDidChange);
         }
 
         void ResizeBrushesTool::nodesDidChange(const std::vector<Model::Node*>&) {
