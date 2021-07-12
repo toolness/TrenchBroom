@@ -485,28 +485,34 @@ namespace TrenchBroom {
         void MapRenderer::invalidateNodes(const std::vector<Model::Node*>& nodes) {
             size_t invalidatedNodes = 0;
 
-            Model::Node::visitAll(nodes, kdl::overload(
-                [](auto&& thisLambda, Model::WorldNode* world)  { world->visitChildren(thisLambda); },
-                [](auto&& thisLambda, Model::LayerNode* layer)  { layer->visitChildren(thisLambda); },
-                [&](auto&& thisLambda, Model::GroupNode* group) {
-                    m_groupRenderer->invalidateGroup(group);
-                    ++invalidatedNodes;
-                    group->visitChildren(thisLambda);
-                },
-                [&](auto&& thisLambda, Model::EntityNode* entity) {
-                    m_entityRenderer->invalidateEntity(entity);
-                    ++invalidatedNodes;
-                    entity->visitChildren(thisLambda);
-                },
-                [&](auto&&, Model::BrushNode* brush) {
-                    m_brushRenderer->invalidateBrush(brush);
-                    ++invalidatedNodes;
-                },
-                [&](auto&&, Model::PatchNode* patchNode) {
-                    m_patchRenderer->invalidate();
-                    ++invalidatedNodes;
-                }
-            ));
+            for (auto* node : nodes) {
+                node->accept(kdl::overload(
+                    [](auto&&, Model::WorldNode* world)  {
+                        //world->visitChildren(thisLambda);
+                    },
+                    [](auto&&, Model::LayerNode* layer)  {
+                        //layer->visitChildren(thisLambda);
+                    },
+                    [&](auto&&, Model::GroupNode* group) {
+                        m_groupRenderer->invalidateGroup(group);
+                        ++invalidatedNodes;
+                        //group->visitChildren(thisLambda);
+                    },
+                    [&](auto&&, Model::EntityNode* entity) {
+                        m_entityRenderer->invalidateEntity(entity);
+                        ++invalidatedNodes;
+                        //entity->visitChildren(thisLambda);
+                    },
+                    [&](auto&&, Model::BrushNode* brush) {
+                        m_brushRenderer->invalidateBrush(brush);
+                        ++invalidatedNodes;
+                    },
+                    [&](auto&&, Model::PatchNode* patchNode) {
+                        m_patchRenderer->invalidate();
+                        ++invalidatedNodes;
+                    }
+                ));
+            }
         }
 
         void MapRenderer::invalidateBrushFaces(const std::vector<Model::BrushFaceHandle>& faces) {
