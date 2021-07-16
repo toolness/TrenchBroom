@@ -30,6 +30,7 @@ namespace TrenchBroom {
         class BrushNode;
         class BrushFace;
         class EntityProperty;
+        class EntityPropertyConfig;
         class GroupNode;
         class LayerNode;
         class Node;
@@ -84,7 +85,7 @@ namespace TrenchBroom {
             void beginFile(const std::vector<const Model::Node*>& rootNodes);
             void endFile();
         public:
-            void defaultLayer(const Model::WorldNode& world);
+            void defaultLayer(const Model::EntityPropertyConfig& entityPropertyConfig, const Model::WorldNode& world);
             void customLayer(const Model::LayerNode* layer);
             void group(const Model::GroupNode* group, const std::vector<Model::EntityProperty>& parentProperties);
 

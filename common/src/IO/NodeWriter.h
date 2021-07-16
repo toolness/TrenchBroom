@@ -29,6 +29,7 @@ namespace TrenchBroom {
         class BrushNode;
         class BrushFace;
         class EntityNode;
+        class EntityPropertyConfig;
         class LayerNode;
         class Node;
         class WorldNode;
@@ -42,10 +43,11 @@ namespace TrenchBroom {
             using EntityBrushesMap = std::map<Model::EntityNode*, std::vector<Model::BrushNode*>>;
 
             const Model::WorldNode& m_world;
+            const Model::EntityPropertyConfig& m_entityPropertyConfig;
             std::unique_ptr<NodeSerializer> m_serializer;
         public:
-            NodeWriter(const Model::WorldNode& world, std::ostream& stream);
-            NodeWriter(const Model::WorldNode& world, std::unique_ptr<NodeSerializer> serializer);
+            NodeWriter(const Model::WorldNode& world, const Model::EntityPropertyConfig& entityPropertyConfig, std::ostream& stream);
+            NodeWriter(const Model::WorldNode& world, const Model::EntityPropertyConfig& entityPropertyConfig, std::unique_ptr<NodeSerializer> serializer);
             ~NodeWriter();
 
             void setExporting(bool exporting);

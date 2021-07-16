@@ -59,8 +59,8 @@ namespace TrenchBroom {
             EntityNodeBase(std::move(entity)),
             Object() {}
 
-        EntityNode::EntityNode(std::initializer_list<EntityProperty> properties) :
-        EntityNode(Entity(std::move(properties))) {}
+        EntityNode::EntityNode(const Model::EntityPropertyConfig& entityPropertyConfig, std::initializer_list<EntityProperty> properties) :
+        EntityNode{Entity{entityPropertyConfig, std::move(properties)}} {}
 
         const vm::bbox3& EntityNode::modelBounds() const {
             validateBounds();
