@@ -17,7 +17,7 @@
  along with TrenchBroom. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "AABBTree.h"
+#include "AABBTree2.h"
 #include "IO/DiskIO.h"
 #include "IO/File.h"
 #include "IO/Path.h"
@@ -40,8 +40,8 @@
 #include "../../test/src/Catch2.h"
 
 namespace TrenchBroom {
-    using AABB = AABBTree<double, 3, Model::Node*>;
-    using BOX = AABB::Box;
+    using AABB = AABBTree2<double, 3, Model::Node*>;
+    using BOX = vm::bbox<double, 3>;
 
     TEST_CASE("AABBTreeBenchmark.benchBuildTree", "[AABBTreeBenchmark]") {
         const auto mapPath = IO::Disk::getCurrentWorkingDir() + IO::Path("fixture/benchmark/AABBTree/ne_ruins.map");
@@ -54,7 +54,24 @@ namespace TrenchBroom {
         const vm::bbox3 worldBounds(8192.0);
         auto world = worldReader.read(worldBounds, status);
 
-        std::vector<AABB> trees(100);
+        size_t numLeafs = 0;
+        world->accept(kdl::overload(
+            [] (auto&& thisLambda, Model::WorldNode* world_)  { return world_->visitChildren(thisLambda); },
+            [] (auto&& thisLambda, Model::LayerNode* layer)   { return layer->visitChildren(thisLambda); },
+            [] (auto&& thisLambda, Model::GroupNode* group)   { return group->visitChildren(thisLambda); },
+            [&](auto&& thisLambda, Model::EntityNode* entity) { return entity->visitChildren(thisLambda); ++numLeafs; },
+            [&](Model::BrushNode*)                            { return ++numLeafs; },
+            [&](Model::PatchNode*)                            { return ++numLeafs; }
+        ));
+
+        const size_t numTrees = 100;
+        std::vector<AABB> trees;
+        trees.reserve(numTrees);
+        for (size_t i = 0; i < numTrees; ++i) {
+            trees.emplace_back(numLeafs);
+            // trees.emplace_back();
+        }
+
         timeLambda([&world, &trees]() {
             for (auto& tree : trees) {
                 world->accept(kdl::overload(

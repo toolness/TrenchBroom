@@ -17,7 +17,7 @@
  along with TrenchBroom. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "AABBTree.h"
+#include "AABBTree2.h"
 #include "IO/DiskIO.h"
 #include "IO/File.h"
 #include "IO/Path.h"
@@ -42,8 +42,8 @@
 
 namespace TrenchBroom {
     namespace Model {
-        using AABB = AABBTree<double, 3, Node*>;
-        using BOX = AABB::Box;
+        using AABB = AABBTree2<double, 3, Node*>;
+        using BOX = vm::bbox<double, 3>;
 
         static auto makeTreeBuilder(AABB& tree, vm::bbox3::builder& totalBounds) {
             const auto insert = [&](auto* node) {
@@ -63,7 +63,7 @@ namespace TrenchBroom {
                 }
 
                 if (!tree.contains(node)) {
-                    tree.print(std::cout);
+                    std::cout << tree;
                     UNSCOPED_INFO("Node " << node << " with bounds " << node->physicalBounds() << " at line " << node->lineNumber() << " not found in tree after insertion");
                     REQUIRE(tree.contains(node));
                 }

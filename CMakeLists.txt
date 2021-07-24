@@ -89,6 +89,17 @@ if(TB_ENABLE_ASAN)
     endif()
 endif()
 
+# Enable MSAN if possible and requested
+if(TB_ENABLE_MSAN)
+    message(STATUS "Enabling MSan")
+    if(COMPILER_IS_CLANG OR COMPILER_IS_GNU)
+        add_compile_options(-fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer)
+        add_link_options(-fsanitize=memory)
+    else()
+        message(WARNING "TB isn't set up to enable MSan for compiler ${CMAKE_CXX_COMPILER_ID}")
+    endif()
+endif()
+
 include(cmake/Utils.cmake)
 
 # Find Git

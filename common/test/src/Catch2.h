@@ -35,5 +35,7 @@
 #include <vecmath/ray_io.h>
 #include <vecmath/vec_io.h>
 
-#define CATCH_CONFIG_ENABLE_ALL_STRINGMAKERS 1
+#define CATCH_CONFIG_ENABLE_PAIR_STRINGMAKER 1
+#define CATCH_CONFIG_ENABLE_TUPLE_STRINGMAKER 1
+#define CATCH_CONFIG_ENABLE_OPTIONAL_STRINGMAKER 1
 #include <catch2/catch.hpp>
