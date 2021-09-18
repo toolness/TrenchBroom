@@ -42,7 +42,7 @@ namespace TrenchBroom {
         class EntityNode;
         class EntityNodeBase;
         class EntityProperty;
-        class EntityPropertyConfig;
+        struct EntityPropertyConfig;
         class GroupNode;
         class LayerNode;
         enum class MapFormat;

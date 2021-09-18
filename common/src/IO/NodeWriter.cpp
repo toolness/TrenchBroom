@@ -72,14 +72,12 @@ namespace TrenchBroom {
             }
         }
 
-        NodeWriter::NodeWriter(const Model::WorldNode& world, const Model::EntityPropertyConfig& entityPropertyConfig, std::ostream& stream) :
+        NodeWriter::NodeWriter(const Model::WorldNode& world, std::ostream& stream) :
         m_world(world),
-        m_entityPropertyConfig{entityPropertyConfig},
         m_serializer(MapFileSerializer::create(m_world.mapFormat(), stream)) {}
 
-        NodeWriter::NodeWriter(const Model::WorldNode& world, const Model::EntityPropertyConfig& entityPropertyConfig, std::unique_ptr<NodeSerializer> serializer) :
+        NodeWriter::NodeWriter(const Model::WorldNode& world, std::unique_ptr<NodeSerializer> serializer) :
         m_world(world),
-        m_entityPropertyConfig{entityPropertyConfig},
         m_serializer(std::move(serializer)) {}
 
         NodeWriter::~NodeWriter() = default;
@@ -96,7 +94,7 @@ namespace TrenchBroom {
         }
 
         void NodeWriter::writeDefaultLayer() {
-            m_serializer->defaultLayer(m_entityPropertyConfig, m_world);
+            m_serializer->defaultLayer(m_world);
 
             if (!(m_serializer->exporting() && m_world.defaultLayer()->layer().omitFromExport())) {
                 doWriteNodes(*m_serializer, m_world.defaultLayer()->children());

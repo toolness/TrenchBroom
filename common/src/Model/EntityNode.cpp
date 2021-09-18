@@ -51,10 +51,6 @@ namespace TrenchBroom {
         const HitType::Type EntityNode::EntityHitType = HitType::freeType();
         const vm::bbox3 EntityNode::DefaultBounds(8.0);
 
-        EntityNode::EntityNode() :
-            EntityNodeBase(),
-            Object() {}
-
         EntityNode::EntityNode(Entity entity) :
             EntityNodeBase(std::move(entity)),
             Object() {}
@@ -68,7 +64,7 @@ namespace TrenchBroom {
         }
 
         void EntityNode::setModelFrame(const Assets::EntityModelFrame* modelFrame) {
-            m_entity.setModel(modelFrame);
+            m_entity.setModel(entityPropertyConfig(), modelFrame);
             nodePhysicalBoundsDidChange();
         }
 
@@ -97,7 +93,7 @@ namespace TrenchBroom {
         }
 
         Node* EntityNode::doClone(const vm::bbox3& /* worldBounds */) const {
-            auto* entity = new EntityNode(m_entity);
+            auto* entity = new EntityNode{m_entity};
             cloneAttributes(entity);
             return entity;
         }
@@ -126,12 +122,12 @@ namespace TrenchBroom {
         }
 
         void EntityNode::doChildWasAdded(Node* /* node */) {
-            m_entity.setPointEntity(!hasChildren());
+            m_entity.setPointEntity(entityPropertyConfig(), !hasChildren());
             nodePhysicalBoundsDidChange();
         }
 
         void EntityNode::doChildWasRemoved(Node* /* node */) {
-            m_entity.setPointEntity(!hasChildren());
+            m_entity.setPointEntity(entityPropertyConfig(), !hasChildren());
             nodePhysicalBoundsDidChange();
         }
 

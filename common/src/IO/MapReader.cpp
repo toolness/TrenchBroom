@@ -220,9 +220,9 @@ namespace TrenchBroom {
         /**
          * Creates a world node for the given entity info and configures its default layer according to the information in the entity attributes.
          */
-        static CreateNodeResult createWorldNode(const Model::EntityPropertyConfig& entityPropertyConfig, MapReader::EntityInfo entityInfo, const Model::MapFormat mapFormat) {
+        static CreateNodeResult createWorldNode(MapReader::EntityInfo entityInfo, const Model::EntityPropertyConfig& entityPropertyConfig, const Model::MapFormat mapFormat) {
             auto entity = Model::Entity{entityPropertyConfig, std::move(entityInfo.properties)};
-            auto worldNode = std::make_unique<Model::WorldNode>(Model::Entity{entityPropertyConfig}, mapFormat);
+            auto worldNode = std::make_unique<Model::WorldNode>(entityPropertyConfig, Model::Entity{}, mapFormat);
             worldNode->setFilePosition(entityInfo.startLine, entityInfo.lineCount);
 
             // handle default layer attributes, which are stored in worldspawn
@@ -400,7 +400,7 @@ namespace TrenchBroom {
         static CreateNodeResult createNodeFromEntityInfo(const Model::EntityPropertyConfig& entityPropertyConfig, MapReader::EntityInfo entityInfo, const Model::MapFormat mapFormat) {
             const auto& classname = findProperty(entityInfo.properties, Model::EntityPropertyKeys::Classname);
             if (isWorldspawn(classname, entityInfo.properties)) {
-                return createWorldNode(entityPropertyConfig, std::move(entityInfo), mapFormat);
+                return createWorldNode(std::move(entityInfo), entityPropertyConfig, mapFormat);
             } else if (isLayer(classname, entityInfo.properties)) {
                 return createLayerNode(entityInfo);
             } else if (isGroup(classname, entityInfo.properties)) {

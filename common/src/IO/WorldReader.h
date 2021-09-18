@@ -29,7 +29,7 @@
 
 namespace TrenchBroom {
     namespace Model {
-        class EntityPropertyConfig;
+        struct EntityPropertyConfig;
         class WorldNode;
     }
 

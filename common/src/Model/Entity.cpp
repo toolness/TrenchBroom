@@ -41,11 +41,10 @@ namespace TrenchBroom {
     namespace Model {
         const vm::bbox3 Entity::DefaultBounds = vm::bbox3{8.0};
 
-        Entity::Entity(const EntityPropertyConfig& propertyConfig) :
+        Entity::Entity() :
         m_pointEntity{true},
-        m_model{nullptr} {
-            updateCachedProperties(propertyConfig);
-        }
+        m_model{nullptr},
+        m_cachedProperties({}) {}
 
         Entity::Entity(const EntityPropertyConfig& propertyConfig, std::vector<EntityProperty> properties) :
         m_properties{std::move(properties)},
@@ -146,6 +145,17 @@ namespace TrenchBroom {
 
         const vm::mat4x4& Entity::modelTransformation() const {
             return m_cachedProperties.modelTransformation;
+        }
+
+        void Entity::unsetEntityDefinitionAndModel() {
+            if (m_definition.get() == nullptr && m_model == nullptr) {
+                return;
+            }
+
+            m_definition = Assets::AssetReference<Assets::EntityDefinition>{};
+            m_model = nullptr;
+            m_cachedProperties.rotation = EntityRotationPolicy::getRotation(*this);
+            m_cachedProperties.modelTransformation = vm::mat4x4::identity();
         }
 
         void Entity::addOrUpdateProperty(const EntityPropertyConfig& propertyConfig, std::string key, std::string value, const bool defaultToProtected) {
@@ -282,13 +292,13 @@ namespace TrenchBroom {
                 const auto rotation = vm::strip_translation(transformation);
                 if (rotation != vm::mat4x4::identity()) {
                     // applyRotation does not read the origin, so it's ok that it's already updated now
-                    applyRotation(rotation);
+                    applyRotation(propertyConfig, rotation);
                 }
             }
         }
 
-        void Entity::applyRotation(const vm::mat4x4& rotation) {
-            EntityRotationPolicy::applyRotation(*this, rotation);
+        void Entity::applyRotation(const EntityPropertyConfig& propertyConfig, const vm::mat4x4& rotation) {
+            EntityRotationPolicy::applyRotation(*this, propertyConfig, rotation);
         }
 
         void Entity::updateCachedProperties(const EntityPropertyConfig& propertyConfig) {

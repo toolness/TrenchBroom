@@ -76,12 +76,13 @@ namespace TrenchBroom {
         /**
          * Writes the worldspawn entity.
          */
-        void NodeSerializer::defaultLayer(const Model::EntityPropertyConfig& entityPropertyConfig, const Model::WorldNode& world) {
+        void NodeSerializer::defaultLayer(const Model::WorldNode& world) {
             auto worldEntity = world.entity();
 
             // Transfer the color, locked state, and hidden state from the default layer Layer object to worldspawn
             const Model::LayerNode* defaultLayerNode = world.defaultLayer();
             const Model::Layer& defaultLayer = defaultLayerNode->layer();
+            const auto& entityPropertyConfig = world.entityPropertyConfig();
             if (defaultLayer.color()) {
                 worldEntity.addOrUpdateProperty(entityPropertyConfig, Model::EntityPropertyKeys::LayerColor,
                     kdl::str_to_string(*defaultLayer.color()));

@@ -89,7 +89,7 @@ namespace TrenchBroom {
 
             CachedProperties m_cachedProperties;
         public:
-            explicit Entity(const EntityPropertyConfig& propertyConfig);
+            Entity();
             Entity(const EntityPropertyConfig& propertyConfig, std::vector<EntityProperty> properties);
             Entity(const EntityPropertyConfig& propertyConfig, std::initializer_list<EntityProperty> properties);
 
@@ -127,6 +127,8 @@ namespace TrenchBroom {
             Assets::ModelSpecification modelSpecification() const;
             const vm::mat4x4& modelTransformation() const;
 
+            void unsetEntityDefinitionAndModel();
+
             void addOrUpdateProperty(const EntityPropertyConfig& propertyConfig, std::string key, std::string value, bool defaultToProtected = false);
             void renameProperty(const EntityPropertyConfig& propertyConfig, const std::string& oldKey, std::string newKey);
             void removeProperty(const EntityPropertyConfig& propertyConfig, const std::string& key);
@@ -155,7 +157,7 @@ namespace TrenchBroom {
 
             void transform(const EntityPropertyConfig& propertyConfig, const vm::mat4x4& transformation);
         private:
-            void applyRotation(const vm::mat4x4& rotation);
+            void applyRotation(const EntityPropertyConfig& propertyConfig, const vm::mat4x4& rotation);
             
             void updateCachedProperties(const EntityPropertyConfig& propertyConfig);
 

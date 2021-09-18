@@ -56,7 +56,7 @@ namespace TrenchBroom {
 
         WorldReader::WorldReader(std::string_view str, const Model::MapFormat sourceAndTargetMapFormat, const Model::EntityPropertyConfig& entityPropertyConfig) :
         MapReader(std::move(str), sourceAndTargetMapFormat, sourceAndTargetMapFormat, entityPropertyConfig),
-        m_world(std::make_unique<Model::WorldNode>(Model::Entity{entityPropertyConfig}, sourceAndTargetMapFormat)) {
+        m_world(std::make_unique<Model::WorldNode>(entityPropertyConfig, Model::Entity{}, sourceAndTargetMapFormat)) {
             m_world->disableNodeTreeUpdates();
         }
 

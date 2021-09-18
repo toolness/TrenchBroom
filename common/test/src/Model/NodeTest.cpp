@@ -562,10 +562,10 @@ namespace TrenchBroom {
         TEST_CASE("NodeTest.accept", "[NodeTest]") {
             const auto worldBounds = vm::bbox3(8192.0);
 
-            WorldNode world(Entity(), MapFormat::Standard);
+            WorldNode world({}, {}, MapFormat::Standard);
             LayerNode layer(Layer("name"));
             GroupNode group(Group("name"));
-            EntityNode entity;
+            EntityNode entity{{}};
             BrushNode brush(BrushBuilder(world.mapFormat(), worldBounds).createCube(32.0, "texture").value());
             PatchNode patch(BezierPatch(3, 3, { 
                 BezierPatch::Point{}, BezierPatch::Point{}, BezierPatch::Point{},
@@ -603,7 +603,7 @@ namespace TrenchBroom {
         }
 
         TEST_CASE("NodeTest.acceptAndVisitChildren", "[NodeTest]") {
-            WorldNode world(Entity(), MapFormat::Standard);
+            WorldNode world({}, {}, MapFormat::Standard);
             auto* layer = world.defaultLayer();
 
             auto* entityNode1 = new EntityNode(Entity());
@@ -635,7 +635,7 @@ namespace TrenchBroom {
         }
 
         TEST_CASE("NodeTest.visitParent", "[NodeTest]") {
-            WorldNode world(Entity(), MapFormat::Standard);
+            WorldNode world({}, {}, MapFormat::Standard);
             auto* layer = world.defaultLayer();
 
             CHECK(world.visitParent(nodeTestVisitor) == std::nullopt);
@@ -644,8 +644,8 @@ namespace TrenchBroom {
             CHECK(layer->visitParent(nodeTestVisitor) == Visited::World);
             CHECK(layer->visitParent(constNodeTestVisitor) == Visited::World);
 
-            CHECK(EntityNode().visitParent(nodeTestVisitor) == std::nullopt);
-            CHECK(EntityNode().visitParent(constNodeTestVisitor) == std::nullopt);
+            CHECK(EntityNode{Entity{}}.visitParent(nodeTestVisitor) == std::nullopt);
+            CHECK(EntityNode{Entity{}}.visitParent(constNodeTestVisitor) == std::nullopt);
         }
 
         static auto makeCollectVisitedNodesVisitor(std::vector<Node*>& visited) {
@@ -660,10 +660,10 @@ namespace TrenchBroom {
         }
 
         TEST_CASE("NodeTest.visitAll", "[NodeTest]") {
-            WorldNode world(Entity(), MapFormat::Standard);
+            WorldNode world({}, {}, MapFormat::Standard);
             LayerNode layer(Layer("name"));
             GroupNode group(Group("name"));
-            EntityNode entity;
+            EntityNode entity{Entity{}};
 
             const auto toVisit = std::vector<Node*>{&world, &layer, &group, &entity};
             auto visited = std::vector<Node*>{};
@@ -673,7 +673,7 @@ namespace TrenchBroom {
         }
 
         TEST_CASE("NodeTest.visitChildren", "[NodeTest]") {
-            WorldNode world(Entity(), MapFormat::Standard);
+            WorldNode world({}, {}, MapFormat::Standard);
             auto* layer = world.defaultLayer();
             
             auto* entityNode1 = new EntityNode(Entity());
